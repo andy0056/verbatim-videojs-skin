@@ -21,14 +21,14 @@
     --media-default-accent-text-color: oklch(18% 0.02 80);
 
     /* Surfaces: colour carries the transparency, text and icons stay opaque. */
-    --vb-plate: oklch(9% 0.012 260 / 0.58);
+    --vb-plate: oklch(9% 0.012 260 / 0.66);
     --vb-plate-blur: blur(14px) saturate(120%);
     --vb-plate-pad: calc(var(--media-spacing) * 3);           /* 12px */
     --vb-control-radius: calc(var(--media-spacing) * 2.5);    /* 10px inner radius */
     --vb-plate-radius: calc(var(--vb-control-radius) + var(--vb-plate-pad)); /* 22px: outer = inner + padding (concentric) */
 
     --vb-fg: var(--media-foreground);
-    --vb-fg-dim: color-mix(in oklab, var(--media-foreground) 42%, transparent);
+    --vb-fg-dim: color-mix(in oklab, var(--media-foreground) 50%, transparent);
     --vb-fg-muted: color-mix(in oklab, var(--media-foreground) 64%, transparent);
     --vb-accent: var(--media-primary);
     --vb-accent-wash: color-mix(in oklab, var(--media-primary) 34%, transparent);
@@ -125,10 +125,28 @@
       opacity var(--media-duration-controls) ease,
       translate var(--media-duration-controls) ease;
   }
+  /* Idle during playback: the plate becomes a subtitle. The bar, buttons, eyebrow and time fold away;
+     the sentence stays, quieter, and any pointer or key brings the controls back. */
   .verbatim .video-controls-content:not([data-visible]) .vb-plate {
+    pointer-events: none;
+    padding: calc(var(--media-spacing) * 2) calc(var(--media-spacing) * 3);
+    gap: 0;
+    box-shadow: none;
+  }
+  .verbatim .video-controls-content:not([data-visible]) .vb-row-bar,
+  .verbatim .video-controls-content:not([data-visible]) .vb-play,
+  .verbatim .video-controls-content:not([data-visible]) .vb-time,
+  .verbatim .video-controls-content:not([data-visible]) .vb-eyebrow,
+  .verbatim .video-controls-content:not([data-visible]) .vb-tip {
+    display: none;
+  }
+  .verbatim .video-controls-content:not([data-visible]) .vb-row-text { grid-template-columns: minmax(0, 1fr); }
+  .verbatim .video-controls-content:not([data-visible]) verbatim-transcript { padding-block: 0; }
+  .verbatim .video-controls-content:not([data-visible]) .vb-sentence { text-align: center; }
+  /* With nothing to read, the idle plate hides completely. */
+  .verbatim .video-controls-content:not([data-visible]) .vb-plate:has(verbatim-transcript[data-empty]) {
     opacity: 0;
     translate: 0 var(--media-hidden-offset);
-    pointer-events: none;
   }
 
   .verbatim .vb-row {
