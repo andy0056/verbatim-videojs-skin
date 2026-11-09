@@ -1,40 +1,57 @@
 # Verbatim
 
-A Video.js video skin for HTML, styled with CSS. It started from the Scaffold skin.
+**A Video.js v10 skin where the subtitle becomes the player.**
+
+The sentence you are hearing *is* the control bar. Words fill in as they are spoken. Drag along the words to scrub; click a word to jump straight to it. Hover the thin seek bar and the sentence spoken at that moment appears in its place, set as a quotation, with the time and chapter above it.
+
+Built for the [Video.js Skins Design Challenge](https://contra.com/community/topic/videojsskinschallenge) by [Anirudh Thakur](https://anirudhthakur.work). Video skin for HTML, styled with CSS, started from the Scaffold skin with `npx @videojs/cli skin create`.
+
+## The idea
+
+Every player renders captions as a layer on top of the picture and then puts the controls on top of *that*. Verbatim folds the two together: the current caption sentence sits where the controls go, so the reading surface and the seeking surface are the same thing.
+
+- **Read it.** Spoken words are bright, upcoming words are dim, the current word carries a highlighter stroke and a progress underline.
+- **Scrub it.** Press on any word and drag. Cross the end of the sentence to flip to the next one. Click a word to jump.
+- **Preview it.** Point at the seek bar and the sentence at that moment replaces the live one, in italics, with its time and chapter in the eyebrow. No popup over the video.
+- **Key it.** Tab to the sentence: ← → step by word, ↑ ↓ by sentence, Home/End. It is a `role="slider"` with a live value text, so screen readers hear the word and the time. The thin track underneath is a standard, keyboard-operable time slider with chapter segments.
+- **Fit it.** On narrow players the eyebrow and time step aside and the sentence shrinks; the plate stays. With no captions track the sentence row shows the title and the player behaves like a quiet, conventional skin.
+
+Timing comes from ordinary WebVTT cues (hand-written, or Mux's auto-generated captions). Word times are interpolated across each cue by character count, which reads naturally and needs no word-level timestamps.
+
+## Craft notes
+
+- Surfaces carry translucency in the colour, never in `opacity`, so text and icons stay opaque over bright and dark footage.
+- Concentric radii: the plate radius is the control radius plus the plate padding.
+- Tabular numerals everywhere digits tick.
+- Menus and tooltips grow from their triggers (inherited from the Scaffold base); closing is quicker than opening.
+- `prefers-reduced-motion` stops word transitions; `prefers-contrast: more` and `prefers-reduced-transparency` make the plate solid; `forced-colors` maps the highlighter to `Highlight`.
+- Own font stacks: a book serif for the sentence, a UI sans for everything else. The host page's font is never inherited. Public knobs match the packaged skins: `--media-accent-color`, `--media-accent-text-color`, `--media-border-radius`, `--media-font-family`, `--media-scale-unit`, plus `--vb-sentence-font` and `--vb-plate`.
 
 ## Develop
 
 ```sh
+npm install
 npm run dev
 ```
 
-The workbench opens your skin in a slimmed-down version of the Video.js sandbox. It plays NASA's Cosmic Dawn trailer from Mux, with chapters; change the media in `apps/preview/src/frame/player`. The options panel sets the player's width and aspect ratio, the color scheme, text direction, and language, and playback options such as autoplay, muted, loop, and preload. The arrow button opens the preview on its own. The settings live in the URL, so a link such as `/?width=384&ratio=9:16&dir=rtl&locale=ar` opens the workbench in that state, and `/preview.html#width=384&ratio=9:16` opens the preview alone.
+The workbench opens the skin in a slimmed-down version of the Video.js sandbox: set the player's width and aspect ratio, colour scheme, text direction, language, and playback options. The settings live in the URL, so `/?width=384&ratio=9:16` opens the workbench in that state and `/preview.html#width=384&ratio=9:16` opens the preview alone.
 
-## Deploy
+The preview plays a bundled demo clip with captions and chapters. To play a Mux asset instead, set `MUX_PLAYBACK_ID` and `MUX_TEXT_TRACK_ID` in `apps/preview/src/frame/player.ts`; the transcript is loaded whole from Mux's WebVTT endpoint.
 
-```sh
-npm run deploy
-```
+## Use the skin
 
-It asks where to deploy the workbench: Vercel, Netlify, or Cloudflare Pages. Name one to skip the question, such as `npm run deploy vercel`. The first time, the host's CLI signs you in and creates the project, then every run prints the URL. Vercel and Netlify deploy to a preview URL you can share; to deploy to production instead, add `--prod` to the `deploy:netlify` script, or to both commands in `deploy:vercel`.
-
-To deploy on every push instead, put the project on GitHub and import it on Vercel or Netlify; `vercel.json` and `netlify.toml` already describe the build. The build uses relative URLs, so `dist/` also works on any static host, including in a subfolder.
+Import `src/video/skin.ts` once, then paste the markup from `src/video/skin.html` around your media component inside a `<video-player>`, replacing the placeholder comment. Give the media a `kind="captions"` (or `subtitles`) `<track>`; a `kind="chapters"` track adds chapter segments and the eyebrow label.
 
 ## Where things live
 
-- `src/`: your skin, and only your skin. Keep, rewrite, or delete any of it.
-  - `src/video/`: the skin component and its parts.
-  - `src/styles/`: theme tokens and shared styles the skin imports, when it started from a packaged skin.
-  - `src/skin.css`: global styles for the skin.
-- `apps/preview/`: the workbench that previews the skin. You don't need to change it.
-  - `src/shell/`: the Shadcn shell.
-  - `src/frame/`: the page the shell frames. `player` mounts your skin in a player and sets the media it plays.
-  - `public/`: files the preview serves, such as the chapters track.
-- `vercel.json`, `netlify.toml`: how those hosts build the workbench.
-- `skin.json`: what this skin is built from. Keep it; it records the Video.js version the skin was created with.
+- `src/video/skin.html`: the layout. Device buttons top-right; the reading plate at the bottom with the sentence row and the bar row.
+- `src/video/skin.css`: Verbatim's styles.
+- `src/video/scaffold-base.css`: the Scaffold component behaviours Verbatim inherits (popups, menus, sliders, indicators, dialogs).
+- `src/video/verbatim-transcript.ts`: the `<verbatim-transcript>` component.
+- `src/video/icons.ts`: the Verbatim icon family.
+- `src/styles/`: shared tokens and preference overrides from the Scaffold skin.
+- `apps/preview/`: the workbench. `src/frame/player.ts` chooses the media.
 
-## Learn more
+## License
 
-- [Build your own skin](https://videojs.org/docs/framework/html/guides/build-your-own-skin)
-- [Customize skins](https://videojs.org/docs/framework/html/guides/customize-skins)
-- [UI components](https://videojs.org/docs/framework/html/guides/ui-components)
+Apache-2.0. See `LICENSE`.
