@@ -10,9 +10,9 @@ import skinTemplate from '@/video/skin.html?raw';
  * (auto-generated) text track, the preview streams from Mux and loads the whole transcript up front from Mux's
  * WebVTT endpoint. Without them it falls back to the bundled demo clip and its hand-written captions.
  */
-const MUX_PLAYBACK_ID = '';
-const MUX_TEXT_TRACK_ID = '';
-const MUX_CHAPTERS = './verbatim-demo-chapters.vtt';
+const MUX_PLAYBACK_ID = 'pKXQkIyGiC4S4urt7p7ivSqmItowQ0237J00E4NyF2JX8';
+const MUX_TEXT_TRACK_ID = 'JAAX9fsmL00GaYq00HmAGI6BT01CJtmSQq0001Wv361qMiAPo9MyUd8RLTA';
+const MUX_CHAPTERS = './star-stuff-chapters.vtt';
 
 const DEMO_SRC = './verbatim-demo.mp4';
 const DEMO_CAPTIONS = './verbatim-demo.vtt';
@@ -23,8 +23,11 @@ const MEDIA_PLACEHOLDER = '<!-- Add a compatible media component here. -->';
 export function createPlayer(): HTMLElement {
   const player = document.createElement('video-player');
 
+  // `?media=demo` (or `#media=demo`) forces the bundled clip, for offline work on the skin.
+  const forceDemo = /[?#&]media=demo\b/.test(location.href);
+
   let media: string;
-  if (MUX_PLAYBACK_ID) {
+  if (MUX_PLAYBACK_ID && !forceDemo) {
     const captions = MUX_TEXT_TRACK_ID
       ? `<track kind="captions" label="English" srclang="en" src="https://stream.mux.com/${MUX_PLAYBACK_ID}/text/${MUX_TEXT_TRACK_ID}.vtt">`
       : '';

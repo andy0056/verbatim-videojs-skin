@@ -58,20 +58,65 @@ function cueText(cue: TextTrackCue): string {
   return raw.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 }
 
-function buildSentence(cue: TextTrackCue): Sentence | null {
-  const text = cueText(cue);
-  if (!text) return null;
+/** Words of one cue, timed by character share of the cue's duration. */
+function cueWords(cue: TextTrackCue, text: string): Word[] {
   const tokens = text.split(WORD_SPLIT).filter(Boolean);
+  if (!tokens.length) return [];
   const total = tokens.reduce((n, t) => n + t.length, 0) + Math.max(0, tokens.length - 1);
   const duration = Math.max(0.001, cue.endTime - cue.startTime);
   let offset = 0;
-  const words: Word[] = tokens.map((t, i) => {
+  return tokens.map((t, i) => {
     const start = cue.startTime + (offset / total) * duration;
     offset += t.length + (i < tokens.length - 1 ? 1 : 0);
     const end = cue.startTime + (offset / total) * duration;
     return { text: t, start, end };
   });
-  return { start: cue.startTime, end: cue.endTime, text, words };
+}
+
+const SENTENCE_END = /[.!?…]["'”’)]*$/;
+const CLAUSE_END = /[,;:—–]["'”’)]*$/;
+const SOFT_CHARS = 110;   // past this, break at the next clause mark
+const HARD_CHARS = 190;   // never longer than two lines at desktop size
+const MAX_SECONDS = 14;
+const MAX_GAP_SECONDS = 1.5;
+
+/**
+ * Group cue words into readable sentences. Auto-generated captions (Mux, YouTube) cut cues at
+ * line-wrap points, so a cue is often a fragment: "analogy." or "all part of". Reading surfaces want
+ * sentences, so words run on until one ends a sentence, a long run reaches a clause mark, the run
+ * gets too long for the plate, or there is a real pause between cues. Hand-written captions that end
+ * each cue with punctuation pass through unchanged.
+ */
+function buildSentences(cues: TextTrackCueList): Sentence[] {
+  const out: Sentence[] = [];
+  let words: Word[] = [];
+  let text = '';
+  let start = 0;
+  let lastEnd = 0;
+
+  const flush = () => {
+    if (words.length) out.push({ start, end: lastEnd, text, words });
+    words = [];
+    text = '';
+  };
+
+  for (let i = 0; i < cues.length; i++) {
+    const cue = cues[i];
+    const t = cueText(cue);
+    if (!t) continue;
+    if (words.length && (cue.startTime - lastEnd > MAX_GAP_SECONDS || cue.endTime - start > MAX_SECONDS)) flush();
+    for (const w of cueWords(cue, t)) {
+      if (words.length && text.length + 1 + w.text.length > HARD_CHARS) flush();
+      if (!words.length) start = w.start;
+      words.push(w);
+      text = text ? `${text} ${w.text}` : w.text;
+      lastEnd = w.end;
+      if (SENTENCE_END.test(w.text) || (text.length >= SOFT_CHARS && CLAUSE_END.test(w.text))) flush();
+    }
+    lastEnd = cue.endTime;
+  }
+  flush();
+  return out.sort((a, b) => a.start - b.start);
 }
 
 export class VerbatimTranscriptElement extends UIElement {
@@ -83,6 +128,7 @@ export class VerbatimTranscriptElement extends UIElement {
   #track: TextTrack | null = null;
   #chapters: TextTrack | null = null;
   #sentences: Sentence[] = [];
+  #cueCount = -1;
   #index = -1; // current sentence index
   #wordIndex = -1;
   #raf = 0;
@@ -245,14 +291,10 @@ export class VerbatimTranscriptElement extends UIElement {
       setTimeout(() => this.isConnected && this.#track === track && this.#readCues(), 300);
       return;
     }
-    if (this.#sentences.length === cues.length) return;
-    const sentences: Sentence[] = [];
-    for (let i = 0; i < cues.length; i++) {
-      const s = buildSentence(cues[i]);
-      if (s) sentences.push(s);
-    }
-    sentences.sort((a, b) => a.start - b.start);
-    this.#sentences = sentences;
+    if (this.#cueCount === cues.length) return;
+    this.#cueCount = cues.length;
+    this.#sentences = buildSentences(cues);
+    const sentences = this.#sentences;
     this.toggleAttribute('data-empty', sentences.length === 0);
     this.#index = -1;
     this.#syncToTime(this.#currentTime());
@@ -260,6 +302,7 @@ export class VerbatimTranscriptElement extends UIElement {
 
   #resetSentences() {
     this.#sentences = [];
+    this.#cueCount = -1;
     this.#index = -1;
     this.#wordIndex = -1;
     this.toggleAttribute('data-empty', true);
