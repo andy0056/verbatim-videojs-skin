@@ -246,6 +246,12 @@
     overflow: hidden;
     color: var(--vb-fg);
   }
+  @keyframes vb-sentence-enter {
+    from { opacity: 0.35; translate: 0 3px; }
+    to { opacity: 1; translate: 0 0; }
+  }
+  .verbatim .vb-sentence[data-enter] { animation: vb-sentence-enter var(--media-duration-slow) ease-out; }
+
   .verbatim .vb-word {
     display: inline;
     color: var(--vb-fg-dim);
@@ -536,6 +542,7 @@
   /* ---------------------------------------------------------------- preferences */
   @media (prefers-reduced-motion: reduce) {
     .verbatim .vb-word { transition: none; }
+    .verbatim .vb-sentence[data-enter] { animation: none; }
     .verbatim .vb-word[data-state="current"] { background-size: 100% 2px; }
     .verbatim .media-time-slider-chapter { transition: none; }
   }

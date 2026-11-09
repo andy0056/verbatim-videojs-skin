@@ -51,15 +51,46 @@ function formatTime(seconds: number): string {
   return `${h ? h + ':' : ''}${mm}:${String(sec).padStart(2, '0')}`;
 }
 
-function cueText(cue: TextTrackCue): string {
+function cueText(cue: CueLike | TextTrackCue): string {
   const anyCue = cue as unknown as { text?: string };
   const raw = anyCue.text ?? '';
   // Strip WebVTT tags such as <c.yellow>, <v Speaker>, <00:00:01.000>
   return raw.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 }
 
+interface CueLike {
+  startTime: number;
+  endTime: number;
+  text: string;
+}
+
+function parseTimestamp(ts: string): number {
+  const parts = ts.trim().split(':').map(Number);
+  if (parts.some((n) => !Number.isFinite(n))) return NaN;
+  const [h, m, sec] = parts.length === 3 ? parts : [0, parts[0], parts[1]];
+  return h * 3600 + m * 60 + sec;
+}
+
+/** Parse the cues of a WebVTT file: timings and text only, which is all a transcript needs. */
+export function parseWebVtt(source: string): CueLike[] {
+  const cues: CueLike[] = [];
+  const blocks = source.replace(/\r\n?/g, '\n').split(/\n{2,}/);
+  for (const block of blocks) {
+    const lines = block.split('\n');
+    const timingIndex = lines.findIndex((l) => l.includes('-->'));
+    if (timingIndex === -1) continue;
+    const [from, to] = lines[timingIndex].split('-->');
+    const startTime = parseTimestamp(from);
+    const endTime = parseTimestamp(to.split(/\s+/)[1] ?? to.trim().split(' ')[0]);
+    if (!Number.isFinite(startTime) || !Number.isFinite(endTime)) continue;
+    const text = lines.slice(timingIndex + 1).join(' ').trim();
+    if (text) cues.push({ startTime, endTime, text });
+  }
+  return cues;
+}
+
 /** Words of one cue, timed by character share of the cue's duration. */
-function cueWords(cue: TextTrackCue, text: string): Word[] {
+function cueWords(cue: CueLike, text: string): Word[] {
   const tokens = text.split(WORD_SPLIT).filter(Boolean);
   if (!tokens.length) return [];
   const total = tokens.reduce((n, t) => n + t.length, 0) + Math.max(0, tokens.length - 1);
@@ -87,7 +118,7 @@ const MAX_GAP_SECONDS = 1.5;
  * gets too long for the plate, or there is a real pause between cues. Hand-written captions that end
  * each cue with punctuation pass through unchanged.
  */
-function buildSentences(cues: TextTrackCueList): Sentence[] {
+function buildSentences(cues: ArrayLike<CueLike>): Sentence[] {
   const out: Sentence[] = [];
   let words: Word[] = [];
   let text = '';
@@ -101,7 +132,7 @@ function buildSentences(cues: TextTrackCueList): Sentence[] {
   };
 
   for (let i = 0; i < cues.length; i++) {
-    const cue = cues[i];
+    const cue = cues[i] as CueLike;
     const t = cueText(cue);
     if (!t) continue;
     if (words.length && (cue.startTime - lastEnd > MAX_GAP_SECONDS || cue.endTime - start > MAX_SECONDS)) flush();
@@ -141,6 +172,16 @@ export class VerbatimTranscriptElement extends UIElement {
   #slider: HTMLElement | null = null;
   #hoverPreview = false;
 
+  #srcLoaded: string | null = null;
+
+  static get observedAttributes() {
+    return ['src'];
+  }
+
+  attributeChangedCallback(name: string, _old: string | null, value: string | null) {
+    if (name === 'src' && this.isConnected) void this.#loadSrc(value);
+  }
+
   // DOM parts
   #eyebrow!: HTMLElement;
   #sentenceEl!: HTMLElement;
@@ -174,7 +215,32 @@ export class VerbatimTranscriptElement extends UIElement {
     queueMicrotask(() => {
       this.#attachMedia();
       this.#attachSlider();
+      void this.#loadSrc(this.getAttribute('src'));
     });
+  }
+
+  /**
+   * A `src` pointing at a WebVTT file gives the transcript the whole text up front, independent of
+   * how the media loads its own captions (HLS manifests load cues progressively, segment by segment).
+   */
+  async #loadSrc(src: string | null) {
+    if (!src || src === this.#srcLoaded) return;
+    this.#srcLoaded = src;
+    try {
+      const response = await fetch(src, { mode: 'cors' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const cues = parseWebVtt(await response.text());
+      if (this.#srcLoaded !== src || !this.isConnected) return;
+      this.#cueCount = cues.length;
+      this.#sentences = buildSentences(cues);
+      this.toggleAttribute('data-empty', this.#sentences.length === 0);
+      this.#index = -1;
+      this.#syncToTime(this.#currentTime());
+    } catch (error) {
+      console.warn('[verbatim] could not load transcript from', src, error);
+      this.#srcLoaded = null; // fall back to the media's own text tracks
+      this.#pickTracks();
+    }
   }
 
   disconnectedCallback() {
@@ -266,6 +332,10 @@ export class VerbatimTranscriptElement extends UIElement {
     if (!list) return;
     let captions: TextTrack | null = null;
     let chapters: TextTrack | null = null;
+    // An authored <track> element wins over tracks a streaming engine adds from the manifest.
+    const host = this.#media as unknown as Element;
+    const authored = host.querySelector?.('track[kind="captions"], track[kind="subtitles"]') as HTMLTrackElement | null;
+    if (authored?.track) captions = authored.track;
     for (let i = 0; i < list.length; i++) {
       const t = list[i];
       if (!captions && (t.kind === 'captions' || t.kind === 'subtitles')) captions = t;
@@ -274,11 +344,16 @@ export class VerbatimTranscriptElement extends UIElement {
     if (captions && captions.mode === 'disabled') captions.mode = 'hidden'; // load cues without rendering
     if (chapters && chapters.mode === 'disabled') chapters.mode = 'hidden';
 
+    this.#chapters = chapters;
+    if (this.#srcLoaded) {
+      // Sentences come from `src`; the media's captions track is only used for native rendering.
+      if (this.#index >= 0) this.#renderEyebrow(this.#sentences[this.#index]?.start ?? 0);
+      return;
+    }
     if (captions !== this.#track) {
       this.#track = captions;
       this.#resetSentences();
     }
-    this.#chapters = chapters;
     this.#readCues();
   }
 
@@ -293,7 +368,8 @@ export class VerbatimTranscriptElement extends UIElement {
     }
     if (this.#cueCount === cues.length) return;
     this.#cueCount = cues.length;
-    this.#sentences = buildSentences(cues);
+    // VTTCue has `text`; the DOM type for a generic TextTrackCue does not declare it.
+    this.#sentences = buildSentences(cues as unknown as ArrayLike<CueLike>);
     const sentences = this.#sentences;
     this.toggleAttribute('data-empty', sentences.length === 0);
     this.#index = -1;
@@ -341,7 +417,8 @@ export class VerbatimTranscriptElement extends UIElement {
   #syncToTime(time: number) {
     if (!this.#sentences.length) return;
     const shown = this.#previewTime ?? time;
-    const idx = this.#findIndex(shown);
+    // While dragging, the sentence under the pointer stays put; only an edge flip changes it.
+    const idx = this.#dragging && this.#index >= 0 ? this.#index : this.#findIndex(shown);
     if (idx !== this.#index) this.#renderSentence(idx);
     this.#paintProgress(shown);
     this.setAttribute('aria-valuenow', String(Math.round(time)));
@@ -361,6 +438,10 @@ export class VerbatimTranscriptElement extends UIElement {
     });
     this.#sentenceEl.replaceChildren(frag);
     this.#sentenceEl.dataset.index = String(idx);
+    // Restart the enter transition for the new sentence.
+    this.#sentenceEl.removeAttribute('data-enter');
+    void this.#sentenceEl.offsetWidth;
+    this.#sentenceEl.setAttribute('data-enter', '');
     this.#wordIndex = -1;
     if (!this.#hoverPreview) this.#renderEyebrow(s.start);
     this.toggleAttribute('data-gap', false);
@@ -515,12 +596,15 @@ export class VerbatimTranscriptElement extends UIElement {
     }
     if (x > last.r.right) {
       const isLastLine = last.i === spans.length - 1;
-      return { time: s.words[last.i].end, word: spans[last.i], edge: isLastLine && x > rect.right + 4 ? 1 : 0 };
+      const w = s.words[last.i];
+      // Stay just inside this sentence: its end is the next sentence's start.
+      return { time: Math.max(w.start, w.end - 0.02), word: spans[last.i], edge: isLastLine && x > rect.right + 4 ? 1 : 0 };
     }
     // Between words on the same line: the gap belongs to the word before it.
     for (let k = 0; k < onLine.length - 1; k++) {
       if (x >= onLine[k].r.right && x <= onLine[k + 1].r.left) {
-        return { time: s.words[onLine[k].i].end, word: spans[onLine[k].i], edge: 0 };
+        const w = s.words[onLine[k].i];
+        return { time: Math.max(w.start, w.end - 0.02), word: spans[onLine[k].i], edge: 0 };
       }
     }
     return { time: s.start, word: spans[0], edge: 0 };
