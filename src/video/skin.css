@@ -1,0 +1,566 @@
+/* =============================================================================
+   Verbatim — Video.js v10 skin
+   "The subtitle became the player."
+   Layered on top of scaffold-base.css (component behaviours) and the shared tokens in src/styles.
+   Public knobs (same as the packaged skins):
+     --media-accent-color, --media-accent-text-color, --media-border-radius,
+     --media-font-family, --media-scale-unit, --media-object-fit, --media-object-position
+   Verbatim knobs:
+     --vb-sentence-font      typeface for the spoken sentence (default: a book serif)
+     --vb-plate              background of the reading plate
+   ============================================================================= */
+
+@layer verbatim {
+  .verbatim {
+    /* Own font stacks: the skin never inherits the host page's font. */
+    --media-font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --vb-sentence-font: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+
+    /* Accent: a soft highlighter. contrast-color() picks the text colour on it where supported. */
+    --media-default-accent-color: oklch(91% 0.11 92);
+    --media-default-accent-text-color: oklch(18% 0.02 80);
+
+    /* Surfaces: colour carries the transparency, text and icons stay opaque. */
+    --vb-plate: oklch(9% 0.012 260 / 0.58);
+    --vb-plate-blur: blur(14px) saturate(120%);
+    --vb-plate-pad: calc(var(--media-spacing) * 3);           /* 12px */
+    --vb-control-radius: calc(var(--media-spacing) * 2.5);    /* 10px inner radius */
+    --vb-plate-radius: calc(var(--vb-control-radius) + var(--vb-plate-pad)); /* 22px: outer = inner + padding (concentric) */
+
+    --vb-fg: var(--media-foreground);
+    --vb-fg-dim: color-mix(in oklab, var(--media-foreground) 42%, transparent);
+    --vb-fg-muted: color-mix(in oklab, var(--media-foreground) 64%, transparent);
+    --vb-accent: var(--media-primary);
+    --vb-accent-wash: color-mix(in oklab, var(--media-primary) 34%, transparent);
+
+    --media-control-radius: var(--vb-control-radius);
+    --media-popup-radius: calc(var(--media-spacing) * 3);
+    --media-menu-item-radius: calc(var(--media-spacing) * 2);
+    --media-video-border-radius: var(--media-border-radius, calc(var(--media-spacing) * 3));
+  }
+
+  /* ---------------------------------------------------------------- frame */
+  .verbatim.media-container {
+    border-radius: var(--media-video-border-radius);
+    background: #000;
+    font-family: var(--media-font-family);
+  }
+  .verbatim.media-container:focus-visible {
+    outline: 2px solid var(--media-ring);
+    outline-offset: -2px;
+  }
+  .verbatim > video,
+  .verbatim > audio,
+  .verbatim > [slot="media"] {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: var(--media-object-fit, contain);
+    object-position: var(--media-object-position, center);
+  }
+
+  /* The scaffold's bottom panel and centre cluster are replaced by the plate. */
+  .verbatim .video-controls-bottom,
+  .verbatim .video-controls-center { display: none !important; }
+
+  /* Native caption rendering sits above the plate when shown. */
+  .verbatim[data-controls-visible] {
+    --media-caption-controls-y: calc(var(--media-spacing) * -34);
+  }
+
+  /* ---------------------------------------------------------------- backdrop */
+  .verbatim .vb-backdrop {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(to top,
+      color-mix(in oklab, var(--media-backdrop) 42%, transparent),
+      color-mix(in oklab, var(--media-backdrop) 18%, transparent) 40%,
+      transparent 70%);
+    opacity: 1;
+    transition: opacity var(--media-duration-controls) ease;
+  }
+  .verbatim .vb-backdrop:not([data-visible]) { opacity: 0; }
+
+  /* ---------------------------------------------------------------- top row */
+  .verbatim .vb-top {
+    position: absolute;
+    inset-inline: var(--vb-plate-pad);
+    top: var(--vb-plate-pad);
+    display: flex;
+    justify-content: flex-end;
+    gap: calc(var(--media-spacing) * 1);
+    pointer-events: auto;
+    transition: opacity var(--media-duration-controls) ease, translate var(--media-duration-controls) ease;
+  }
+  .verbatim .video-controls-content:not([data-visible]) .vb-top {
+    opacity: 0;
+    translate: 0 calc(var(--media-hidden-offset) * -1);
+    pointer-events: none;
+  }
+  .verbatim .vb-top .media-button {
+    background: var(--vb-plate);
+    -webkit-backdrop-filter: var(--vb-plate-blur);
+    backdrop-filter: var(--vb-plate-blur);
+    box-shadow: var(--media-shadow-surface-inset);
+  }
+
+  /* ---------------------------------------------------------------- plate */
+  .verbatim .vb-plate {
+    position: absolute;
+    inset-inline: var(--vb-plate-pad);
+    bottom: var(--vb-plate-pad);
+    display: grid;
+    gap: calc(var(--media-spacing) * 2);
+    padding: var(--vb-plate-pad);
+    border-radius: var(--vb-plate-radius);
+    background: var(--vb-plate);
+    -webkit-backdrop-filter: var(--vb-plate-blur);
+    backdrop-filter: var(--vb-plate-blur);
+    box-shadow: var(--media-shadow-surface-inset), var(--media-shadow-surface);
+    color: var(--vb-fg);
+    pointer-events: auto;
+    transition:
+      opacity var(--media-duration-controls) ease,
+      translate var(--media-duration-controls) ease;
+  }
+  .verbatim .video-controls-content:not([data-visible]) .vb-plate {
+    opacity: 0;
+    translate: 0 var(--media-hidden-offset);
+    pointer-events: none;
+  }
+
+  .verbatim .vb-row {
+    display: grid;
+    align-items: center;
+    gap: calc(var(--media-spacing) * 2);
+    min-width: 0;
+  }
+  .verbatim .vb-row-text { grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; }
+  .verbatim .vb-row-bar  { grid-template-columns: minmax(0, 1fr) auto; }
+
+  /* ---------------------------------------------------------------- buttons */
+  .verbatim .media-button {
+    width: calc(var(--media-spacing) * 9);   /* 36px */
+    height: calc(var(--media-spacing) * 9);
+    border-radius: var(--vb-control-radius);
+    color: var(--vb-fg);
+    background: transparent;
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+    transition: background-color var(--media-duration) ease, color var(--media-duration) ease;
+  }
+  @media (hover: hover) {
+    .verbatim .media-button:hover { background: var(--media-muted); }
+  }
+  .verbatim .media-button[aria-expanded="true"] { background: var(--media-muted); }
+  .verbatim .media-button:focus-visible {
+    background: var(--media-muted);
+    outline: 2px solid var(--media-ring);
+    outline-offset: 1px;
+  }
+  .verbatim .media-button > media-icon,
+  .verbatim .media-button .media-button-icon,
+  .verbatim .media-button .media-button-icon-base {
+    width: calc(var(--media-spacing) * 4.5);
+    height: calc(var(--media-spacing) * 4.5);
+  }
+  .verbatim .media-button[hidden],
+  .verbatim .media-button[data-hidden] { display: none; }
+
+  /* Play: optically centred triangle, filled glyphs (state toggling comes from scaffold-base). */
+  .verbatim .vb-play { width: calc(var(--media-spacing) * 10); height: calc(var(--media-spacing) * 10); }
+  .verbatim .media-play-button .media-play-button-play-icon { translate: 1px 0; }
+
+  /* Centre play: only before the first play and after the end. */
+  .verbatim .vb-center {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+  }
+  .verbatim .vb-center .media-button {
+    pointer-events: auto;
+    width: calc(var(--media-spacing) * 16);
+    height: calc(var(--media-spacing) * 16);
+    border-radius: 50%;
+    background: var(--vb-plate);
+    -webkit-backdrop-filter: var(--vb-plate-blur);
+    backdrop-filter: var(--vb-plate-blur);
+    box-shadow: var(--media-shadow-surface-inset), var(--media-shadow-surface);
+    transition: opacity var(--media-duration-slow) ease, scale var(--media-duration-slow) ease, background-color var(--media-duration) ease;
+  }
+  .verbatim .vb-center .media-button > media-icon { width: calc(var(--media-spacing) * 7); height: calc(var(--media-spacing) * 7); }
+  .verbatim .vb-center .media-button[data-started]:not([data-ended]) {
+    opacity: 0;
+    scale: var(--media-hidden-playback-scale);
+    pointer-events: none;
+  }
+  .verbatim .vb-center .media-button .media-play-button-play-icon { translate: 2px 0; }
+
+  /* ---------------------------------------------------------------- transcript */
+  .verbatim verbatim-transcript {
+    position: relative;
+    display: block;
+    min-width: 0;
+    padding-block: calc(var(--media-spacing) * 1);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-y;
+    border-radius: calc(var(--media-spacing) * 1.5);
+  }
+  .verbatim verbatim-transcript:focus-visible {
+    outline: 2px solid var(--media-ring);
+    outline-offset: 4px;
+  }
+  .verbatim verbatim-transcript[data-dragging] { cursor: ew-resize; }
+  .verbatim verbatim-transcript[data-empty] { display: none; }
+
+  .verbatim .vb-eyebrow {
+    display: block;
+    font-family: var(--media-font-family);
+    font-size: calc(var(--media-spacing) * 2.6);          /* ~10.4px */
+    line-height: 1.2;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    color: var(--vb-fg-muted);
+    margin-bottom: calc(var(--media-spacing) * 0.75);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .verbatim .vb-sentence {
+    display: block;
+    font-family: var(--vb-sentence-font);
+    font-size: calc(var(--media-spacing) * 4.75);         /* 19px, scales with the player */
+    line-height: 1.32;
+    font-weight: 450;
+    letter-spacing: 0.002em;
+    text-wrap: pretty;
+    max-height: calc(1.32em * 2);
+    overflow: hidden;
+    color: var(--vb-fg);
+  }
+  .verbatim .vb-word {
+    display: inline;
+    color: var(--vb-fg-dim);
+    border-radius: 0.2em;
+    transition: color var(--media-duration) ease, background-color var(--media-duration) ease;
+    /* progress underline: grows with --vb-word-progress on the current word */
+    background-image: linear-gradient(var(--vb-accent), var(--vb-accent));
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0 2px;
+  }
+  .verbatim .vb-word[data-state="past"] { color: var(--vb-fg); }
+  .verbatim .vb-word[data-state="current"] {
+    color: var(--vb-fg);
+    box-shadow: inset 0 -0.55em 0 0 var(--vb-accent-wash);  /* highlighter stroke */
+    background-size: calc(var(--vb-word-progress, 0) * 100%) 2px;
+  }
+  .verbatim .vb-word[data-hover] { text-decoration: underline dotted var(--vb-fg-muted); text-underline-offset: 0.18em; }
+  .verbatim verbatim-transcript[data-gap] .vb-word[data-state="past"] { color: var(--vb-fg-muted); }
+
+  /* Previewing from the seek bar: the sentence at the pointer, set as a quotation. */
+  .verbatim verbatim-transcript[data-previewing] .vb-sentence { font-style: italic; }
+  .verbatim verbatim-transcript[data-previewing] .vb-word { color: var(--vb-fg-muted); box-shadow: none; background-size: 0 2px; }
+  .verbatim verbatim-transcript[data-previewing] .vb-eyebrow { color: var(--vb-accent); }
+
+  .verbatim .vb-tip {
+    position: absolute;
+    left: var(--vb-tip-x, 0);
+    top: var(--vb-tip-y, 0);
+    translate: -50% calc(-100% - var(--media-spacing) * 1.5);
+    font-family: var(--media-font-family);
+    font-size: calc(var(--media-spacing) * 2.75);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    padding: calc(var(--media-spacing) * 1) calc(var(--media-spacing) * 1.75);
+    border-radius: calc(var(--media-spacing) * 1.5);
+    background: var(--media-popover);
+    color: var(--media-popover-foreground);
+    box-shadow: var(--media-shadow-tooltip);
+    -webkit-backdrop-filter: var(--media-backdrop-filter-surface);
+    backdrop-filter: var(--media-backdrop-filter-surface);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 2;
+  }
+  .verbatim .vb-tip[hidden] { display: none; }
+
+  .verbatim .vb-sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* Title stands in when there is no transcript. */
+  .verbatim .vb-title {
+    display: none;
+    min-width: 0;
+    align-self: center;
+    font-family: var(--vb-sentence-font);
+    font-size: calc(var(--media-spacing) * 4.25);
+    line-height: 1.3;
+    color: var(--vb-fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .verbatim .vb-row-text:has(verbatim-transcript[data-empty]) .vb-title { display: block; }
+
+  /* ---------------------------------------------------------------- time */
+  .verbatim .vb-time {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35em;
+    align-self: start;
+    margin-top: calc(var(--media-spacing) * 1.25);
+    font-family: var(--media-font-family);
+    font-size: calc(var(--media-spacing) * 3.1);          /* 12.4px */
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+    color: var(--vb-fg);
+    white-space: nowrap;
+  }
+  .verbatim .vb-time .media-time-separator,
+  .verbatim .vb-time .media-time-duration-value { color: var(--vb-fg-muted); }
+  .verbatim .vb-time .media-time-toggle { display: none; }
+
+  /* ---------------------------------------------------------------- seek bar */
+  /* Every chapter is a full-width plane clipped to its own bounds (the scaffold's approach), so
+     progress stays continuous across segments and the gaps between chapters are real gaps. */
+  .verbatim .media-time-slider {
+    position: relative;
+    display: block;
+    height: calc(var(--media-spacing) * 6);
+    cursor: pointer;
+    touch-action: none;
+    --vb-track-h: 3px;
+    --vb-gap: 0.5;   /* half-gap on each side of a chapter boundary, in --media-spacing units */
+  }
+  .verbatim .media-time-slider-chapters {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+  .verbatim .media-time-slider-chapter {
+    --media-chapter-inset-start: var(--vb-gap);
+    --media-chapter-inset-end: var(--vb-gap);
+    position: absolute;
+    inset: 0;
+    clip-path: inset(0 calc(100% - var(--media-slider-chapter-end, 100%)) 0 var(--media-slider-chapter-start, 0%));
+  }
+  .verbatim .media-time-slider-chapter:first-of-type { --media-chapter-inset-start: 0; }
+  .verbatim .media-time-slider-chapter:last-of-type  { --media-chapter-inset-end: 0; }
+
+  .verbatim .media-time-slider-track {
+    position: absolute;
+    top: 50%;
+    translate: 0 -50%;
+    inset-inline: 0;
+    height: var(--vb-track-h);
+    isolation: isolate;
+    transition: height var(--media-duration) ease, translate var(--media-duration) ease;
+  }
+  .verbatim .media-time-slider:is([data-pointing], [data-dragging]) .media-time-slider-chapter[data-highlighted] .media-time-slider-track,
+  .verbatim .media-time-slider[data-dragging] .media-time-slider-chapter[data-active] .media-time-slider-track { height: calc(var(--vb-track-h) + 2px); }
+  .verbatim .media-time-slider-track::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: calc(var(--media-slider-chapter-start, 0%) + var(--media-spacing) * var(--media-chapter-inset-start, 0));
+    right: calc(100% - var(--media-slider-chapter-end, 100%) + var(--media-spacing) * var(--media-chapter-inset-end, 0));
+    border-radius: 2px;
+    background: color-mix(in oklab, var(--vb-fg) 22%, transparent);
+  }
+  .verbatim .media-time-slider-buffer,
+  .verbatim .media-time-slider-fill {
+    position: absolute;
+    inset-block: 0;
+    left: calc(var(--media-slider-chapter-start, 0%) + var(--media-spacing) * var(--media-chapter-inset-start, 0));
+    border-radius: 2px;
+    clip-path: inset(-1px 0);
+  }
+  .verbatim .media-time-slider-buffer {
+    right: max(calc(100% - var(--media-slider-buffer, 0%)),
+      calc(100% - var(--media-slider-chapter-end, 100%) + var(--media-spacing) * var(--media-chapter-inset-end, 0)));
+    background: color-mix(in oklab, var(--vb-fg) 16%, transparent);
+  }
+  .verbatim .media-time-slider-fill {
+    right: max(calc(100% - var(--media-slider-fill, 0%)),
+      calc(100% - var(--media-slider-chapter-end, 100%) + var(--media-spacing) * var(--media-chapter-inset-end, 0)));
+    background: var(--vb-accent);
+  }
+  .verbatim .media-time-slider[data-dragging] .media-time-slider-fill {
+    right: max(calc(100% - var(--media-slider-pointer, 0%)),
+      calc(100% - var(--media-slider-chapter-end, 100%) + var(--media-spacing) * var(--media-chapter-inset-end, 0)));
+  }
+
+  .verbatim .media-time-slider-thumb {
+    position: absolute;
+    top: 50%;
+    left: var(--media-slider-fill, 0%);
+    width: calc(var(--media-spacing) * 3.25);
+    height: calc(var(--media-spacing) * 3.25);
+    translate: -50% -50%;
+    border-radius: 50%;
+    background: var(--vb-fg);
+    box-shadow: var(--media-shadow-thumb);
+    opacity: 0;
+    scale: 0.6;
+    transition: opacity var(--media-duration) ease, scale var(--media-duration) ease;
+  }
+  .verbatim .media-time-slider[data-dragging] .media-time-slider-thumb { left: var(--media-slider-pointer, 0%); }
+  .verbatim .media-time-slider:is(:hover, [data-dragging], [data-pointing]) .media-time-slider-thumb,
+  .verbatim .media-time-slider-thumb:focus-visible { opacity: 1; scale: 1; }
+  .verbatim .media-time-slider-thumb:focus-visible {
+    outline: 2px solid var(--media-ring);
+    outline-offset: 3px;
+  }
+
+  .verbatim .media-time-slider-preview { display: none; } /* the sentence row is the preview */
+  .verbatim .media-time-slider-preview-unused {
+    position: absolute;
+    bottom: 100%;
+    left: var(--media-slider-pointer, 0%);
+    translate: -50% calc(var(--media-spacing) * -0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--media-duration) ease;
+  }
+  .verbatim .media-time-slider:is([data-pointing], [data-dragging]) .media-time-slider-preview { opacity: 1; }
+  .verbatim .media-time-slider-preview-meta {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5em;
+    padding: calc(var(--media-spacing) * 1) calc(var(--media-spacing) * 1.75);
+    border-radius: calc(var(--media-spacing) * 1.5);
+    background: var(--media-popover);
+    color: var(--media-popover-foreground);
+    box-shadow: var(--media-shadow-tooltip);
+    -webkit-backdrop-filter: var(--media-backdrop-filter-surface);
+    backdrop-filter: var(--media-backdrop-filter-surface);
+    font-size: calc(var(--media-spacing) * 2.75);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .verbatim .media-time-slider-chapter-title { color: var(--vb-fg-muted); }
+  .verbatim .media-time-slider-chapter-title:empty { display: none; }
+  .verbatim .media-slider-thumbnail { display: none; } /* storyboards are a later addition */
+
+  /* Device buttons only when the platform offers them. */
+  .verbatim .media-button[data-availability="unavailable"],
+  .verbatim .media-button[data-availability="unsupported"] { display: none; }
+
+  /* ---------------------------------------------------------------- icon group */
+  .verbatim .vb-icons { display: inline-flex; align-items: center; gap: calc(var(--media-spacing) * 0.5); }
+
+  /* ---------------------------------------------------------------- popups */
+  .verbatim .media-menu-popup,
+  .verbatim .media-volume-popover-popup,
+  .verbatim .media-tooltip-popup {
+    font-family: var(--media-font-family);
+  }
+  .verbatim .media-menu-popup,
+  .verbatim .media-volume-popover-popup {
+    border-radius: var(--media-popup-radius);
+    background: oklch(12% 0.012 260 / 0.78);
+    -webkit-backdrop-filter: var(--media-backdrop-filter-surface);
+    backdrop-filter: var(--media-backdrop-filter-surface);
+    box-shadow: var(--media-shadow-surface-inset), 0 8px 24px -8px oklch(0% 0 0 / .5);
+    color: var(--vb-fg);
+  }
+  .verbatim .media-menu-content { padding: calc(var(--media-spacing) * 1.5); }
+  .verbatim .media-menu-item,
+  .verbatim .media-menu-radio-item,
+  .verbatim .media-menu-back-item {
+    font-size: calc(var(--media-spacing) * 3.25);
+    border-radius: var(--media-menu-item-radius);
+    min-height: calc(var(--media-spacing) * 9);
+    padding-inline: calc(var(--media-spacing) * 2.5);
+  }
+  .verbatim .media-menu-item[data-highlighted],
+  .verbatim .media-menu-radio-item[data-highlighted],
+  .verbatim .media-menu-back-item[data-highlighted] { background: var(--media-muted); }
+  .verbatim .media-menu-radio-item[aria-checked="true"] { color: var(--vb-fg); }
+  .verbatim .media-menu-radio-icon { color: var(--vb-accent); }
+  .verbatim .media-menu-hint-label { font-variant-numeric: tabular-nums; color: var(--vb-fg-muted); }
+  .verbatim .media-menu-separator { box-shadow: var(--media-shadow-separator); opacity: .6; }
+  .verbatim .media-volume-popover-popup { padding: calc(var(--media-spacing) * 3) calc(var(--media-spacing) * 2.5); }
+  .verbatim .media-volume-slider-fill { background: var(--vb-accent); }
+  .verbatim .media-volume-slider-thumb { background: var(--vb-fg); border-radius: 50%; }
+  .verbatim .media-volume-slider-track { border-radius: 2px; }
+
+  /* ---------------------------------------------------------------- narrow players */
+  @container media-root (width < 42rem) {
+    .verbatim .vb-plate { --vb-plate-pad: calc(var(--media-spacing) * 2.5); gap: calc(var(--media-spacing) * 1.5); }
+    .verbatim .vb-sentence { font-size: calc(var(--media-spacing) * 4); }
+    .verbatim .vb-eyebrow { display: none; }
+    .verbatim .vb-row-text { grid-template-columns: auto minmax(0, 1fr); align-items: center; }
+    .verbatim .vb-time { display: none; }
+    .verbatim .vb-play { width: calc(var(--media-spacing) * 9); height: calc(var(--media-spacing) * 9); }
+    .verbatim .vb-icons .media-captions-button { display: none; }
+    .verbatim .vb-top .media-pip-button { display: none; }
+  }
+  @container media-root (width < 24rem) {
+    .verbatim .vb-plate { --vb-plate-pad: calc(var(--media-spacing) * 2); gap: calc(var(--media-spacing) * 1); }
+    .verbatim .vb-sentence { font-size: calc(var(--media-spacing) * 3.6); line-height: 1.3; }
+    .verbatim verbatim-transcript { padding-block: calc(var(--media-spacing) * 0.5); }
+    .verbatim .vb-icons .vb-settings { display: none; }
+    .verbatim .vb-top { display: none; }
+    .verbatim .media-button { width: calc(var(--media-spacing) * 8); height: calc(var(--media-spacing) * 8); }
+  }
+  .verbatim .vb-play-compact { display: none; }
+
+  /* Touch: thumb-sized targets, the thumb stays visible. */
+  @media (pointer: coarse) {
+    .verbatim .media-button { min-width: 44px; min-height: 44px; }
+    .verbatim .media-time-slider { height: calc(var(--media-spacing) * 8); }
+    .verbatim .media-time-slider-thumb { opacity: 1; scale: 1; }
+    .verbatim verbatim-transcript { padding-block: calc(var(--media-spacing) * 2); }
+  }
+
+  /* ---------------------------------------------------------------- preferences */
+  @media (prefers-reduced-motion: reduce) {
+    .verbatim .vb-word { transition: none; }
+    .verbatim .vb-word[data-state="current"] { background-size: 100% 2px; }
+    .verbatim .media-time-slider-chapter { transition: none; }
+  }
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    .verbatim {
+      --vb-plate: var(--media-background);
+      --vb-plate-blur: none;
+      --vb-fg-dim: color-mix(in oklab, var(--media-foreground) 60%, transparent);
+    }
+    .verbatim .vb-backdrop { display: none; }
+  }
+  @media (forced-colors: active) {
+    .verbatim {
+      --vb-plate: Canvas;
+      --vb-plate-blur: none;
+      --vb-fg: CanvasText;
+      --vb-fg-dim: GrayText;
+      --vb-fg-muted: GrayText;
+      --vb-accent: Highlight;
+      --vb-accent-wash: Highlight;
+    }
+    .verbatim .vb-plate { border: 1px solid CanvasText; box-shadow: none; }
+    .verbatim .vb-word[data-state="current"] { color: HighlightText; background-color: Highlight; box-shadow: none; }
+    .verbatim .media-time-slider-track { background: GrayText; }
+    .verbatim .media-time-slider-fill { background: Highlight; }
+    .verbatim .media-time-slider-thumb { background: CanvasText; }
+  }
+}
