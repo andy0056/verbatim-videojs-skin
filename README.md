@@ -41,7 +41,7 @@ npm run dev
 
 The workbench opens the skin in a slimmed-down version of the Video.js sandbox: set the player's width and aspect ratio, colour scheme, text direction, language, and playback options. The settings live in the URL, so `/?width=384&ratio=9:16` opens the workbench in that state and `/preview.html#width=384&ratio=9:16` opens the preview alone.
 
-The preview plays a bundled demo clip with captions and chapters. To play a Mux asset instead, set `MUX_PLAYBACK_ID` and `MUX_TEXT_TRACK_ID` in `apps/preview/src/frame/player.ts`; the transcript is loaded whole from Mux's WebVTT endpoint.
+The preview plays a bundled demo clip with captions and chapters. To play a Mux asset instead, set `MUX_PLAYBACK_ID` and `MUX_TEXT_TRACK_ID` in `apps/preview/src/frame/player.ts`; the transcript is loaded whole from Mux's WebVTT endpoint. Generated captions sometimes split or mishear a word, so `MUX_TRANSCRIPT` can point at a corrected copy of that file instead; the demo uses one, with its two corrections noted at the top of `apps/preview/public/star-stuff.vtt`.
 
 ## Use the skin
 

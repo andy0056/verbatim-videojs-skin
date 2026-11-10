@@ -14,6 +14,9 @@ import skinTemplate from '@/video/skin.html?raw';
 const MUX_PLAYBACK_ID = 'pKXQkIyGiC4S4urt7p7ivSqmItowQ0237J00E4NyF2JX8';
 const MUX_TEXT_TRACK_ID = 'JAAX9fsmL00GaYq00HmAGI6BT01CJtmSQq0001Wv361qMiAPo9MyUd8RLTA';
 const MUX_CHAPTERS = './star-stuff-chapters.vtt';
+// Mux's generated captions with two words corrected by hand (see the note in the file). Leave empty to
+// read the generated track straight from Mux.
+const MUX_TRANSCRIPT = './star-stuff.vtt';
 const MUX_TITLE = 'How are we made of star stuff? · NASA';
 
 const DEMO_SRC = './verbatim-demo.mp4';
@@ -34,7 +37,7 @@ export function createPlayer(): HTMLElement {
     // The manifest already carries the generated subtitles for the captions menu and native rendering;
     // the transcript loads the same track whole from Mux's WebVTT endpoint.
     media = `<mux-video src="https://stream.mux.com/${MUX_PLAYBACK_ID}.m3u8" playsinline crossorigin><track kind="chapters" label="English" srclang="en" src="${MUX_CHAPTERS}" default></mux-video>`;
-    transcriptSrc = MUX_TEXT_TRACK_ID ? `https://stream.mux.com/${MUX_PLAYBACK_ID}/text/${MUX_TEXT_TRACK_ID}.vtt` : '';
+    transcriptSrc = MUX_TRANSCRIPT || (MUX_TEXT_TRACK_ID ? `https://stream.mux.com/${MUX_PLAYBACK_ID}/text/${MUX_TEXT_TRACK_ID}.vtt` : '');
     // A link to a sentence opens on the frame it was said over, not the opening frame.
     const linked = readFragmentTime(location.hash);
     player.setAttribute('poster', `https://image.mux.com/${MUX_PLAYBACK_ID}/thumbnail.webp?time=${linked === null ? 1 : Math.round(linked * 10) / 10}`);
