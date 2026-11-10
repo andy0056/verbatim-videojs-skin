@@ -71,3 +71,4 @@ import '@videojs/html/ui/seek-indicator-value';
 import './icons';
 import './verbatim-transcript';
 import './verbatim-find';
+import './verbatim-quote';

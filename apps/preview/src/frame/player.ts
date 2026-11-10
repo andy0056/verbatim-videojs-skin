@@ -1,6 +1,7 @@
 import '@videojs/html/video/player';
 import '@videojs/html/media/mux-video';
 import '@/video/skin';
+import { readFragmentTime } from '@/video/verbatim-quote';
 import skinTemplate from '@/video/skin.html?raw';
 
 /**
@@ -34,7 +35,9 @@ export function createPlayer(): HTMLElement {
     // the transcript loads the same track whole from Mux's WebVTT endpoint.
     media = `<mux-video src="https://stream.mux.com/${MUX_PLAYBACK_ID}.m3u8" playsinline crossorigin><track kind="chapters" label="English" srclang="en" src="${MUX_CHAPTERS}" default></mux-video>`;
     transcriptSrc = MUX_TEXT_TRACK_ID ? `https://stream.mux.com/${MUX_PLAYBACK_ID}/text/${MUX_TEXT_TRACK_ID}.vtt` : '';
-    player.setAttribute('poster', `https://image.mux.com/${MUX_PLAYBACK_ID}/thumbnail.webp?time=1`);
+    // A link to a sentence opens on the frame it was said over, not the opening frame.
+    const linked = readFragmentTime(location.hash);
+    player.setAttribute('poster', `https://image.mux.com/${MUX_PLAYBACK_ID}/thumbnail.webp?time=${linked === null ? 1 : Math.round(linked * 10) / 10}`);
     player.setAttribute('title', MUX_TITLE);
   } else {
     media = `<video src="${DEMO_SRC}" playsinline crossorigin preload="metadata"><track kind="captions" label="English" srclang="en" src="${DEMO_CAPTIONS}"><track kind="chapters" label="English" srclang="en" src="${DEMO_CHAPTERS}" default></video>`;

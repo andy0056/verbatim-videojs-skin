@@ -39,6 +39,7 @@
     --vb-field: color-mix(in oklab, var(--media-foreground) 10%, transparent);
     --vb-line-height: 1.32;
     --vb-thumb: calc(var(--media-spacing) * 3.25);            /* seek thumb, 13px */
+    --vb-rail: calc(var(--media-spacing) * 10);               /* left rail: play above, link below */
 
     --media-control-radius: var(--vb-control-radius);
     --media-popup-radius: calc(var(--media-spacing) * 3);
@@ -185,7 +186,7 @@
     min-width: 0;
   }
   .verbatim .vb-row-text { grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: start; }
-  .verbatim .vb-row-bar  { grid-template-columns: minmax(0, 1fr) auto; }
+  .verbatim .vb-row-bar  { grid-template-columns: auto minmax(0, 1fr) auto; }
 
   /* ---------------------------------------------------------------- buttons */
   .verbatim .media-button {
@@ -218,7 +219,7 @@
   .verbatim .media-button[data-hidden] { display: none; }
 
   /* Play: optically centred triangle, filled glyphs (state toggling comes from scaffold-base). */
-  .verbatim .vb-play { width: calc(var(--media-spacing) * 10); height: calc(var(--media-spacing) * 10); }
+  .verbatim .vb-play { width: var(--vb-rail); height: var(--vb-rail); }
   .verbatim .media-play-button .media-play-button-play-icon { translate: 1px 0; }
 
   /* Centre play: only before the first play and after the end. */
@@ -343,12 +344,12 @@
   .verbatim verbatim-transcript[data-previewing] .vb-eyebrow { color: var(--vb-accent); }
 
   /* Search matches are boxed; the selected one is filled. Shape tells them from the spoken word. */
-  .verbatim .vb-word[data-match] {
+  .verbatim verbatim-transcript .vb-word[data-match] {
     color: var(--vb-fg);
     outline: 1.5px solid var(--vb-accent);
     outline-offset: 1px;
   }
-  .verbatim .vb-word[data-match="active"] {
+  .verbatim verbatim-transcript .vb-word[data-match="active"] {
     color: var(--media-primary-foreground);
     background-image: linear-gradient(var(--vb-accent), var(--vb-accent));
     background-size: 100% 100%;
@@ -669,6 +670,25 @@
     background: var(--vb-accent);
   }
 
+  /* ---------------------------------------------------------------- quote link */
+  /* Sits under the play button, so the seek bar starts where the sentence does. */
+  .verbatim .vb-quote { display: grid; place-items: center; width: var(--vb-rail); }
+  .verbatim .vb-quote-check,
+  .verbatim .vb-quote-tip-done { display: none; }
+  .verbatim .vb-quote[data-copied] .vb-quote-link,
+  .verbatim .vb-quote[data-copied] .vb-quote-tip { display: none; }
+  .verbatim .vb-quote[data-copied] .vb-quote-check { display: block; }
+  .verbatim .vb-quote[data-copied] .vb-quote-tip-done { display: inline; }
+  .verbatim .vb-quote[data-copied] .vb-quote-button { color: var(--vb-accent); }
+  .verbatim .vb-plate:has(verbatim-transcript[data-empty]) .vb-quote { display: none; }
+  .verbatim .vb-plate:has(verbatim-transcript[data-empty]) .vb-row-bar { grid-template-columns: minmax(0, 1fr) auto; }
+
+  /* The copied sentence is run over with the highlighter, then let go. */
+  @keyframes vb-quoted {
+    30%, 70% { color: var(--vb-fg); background-size: 0 2px, 100% 0.62em, 100% 0.62em; }
+  }
+  .verbatim verbatim-transcript[data-quoted] .vb-word { animation: vb-quoted 900ms ease; }
+
   /* ---------------------------------------------------------------- tooltips */
   .verbatim .media-tooltip-popup {
     --media-tooltip-side-offset: calc(var(--media-spacing) * 2);
@@ -691,14 +711,14 @@
     .verbatim .vb-eyebrow { display: none; }
     .verbatim .vb-row-text { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
     .verbatim .vb-time { display: none; }
-    .verbatim .vb-play { width: calc(var(--media-spacing) * 9); height: calc(var(--media-spacing) * 9); }
+    .verbatim .vb-content { --vb-rail: calc(var(--media-spacing) * 9); }
     .verbatim .vb-icons .media-captions-button { display: none; }
     .verbatim .vb-top .media-pip-button { display: none; }
     /* The plate covers the middle of a small player, and its own play button is always in reach. */
     .verbatim .vb-center { display: none; }
   }
   @container media-root (width < 24rem) {
-    .verbatim .vb-content { --vb-plate-pad: calc(var(--media-spacing) * 2); --vb-plate-gap: calc(var(--media-spacing) * 1); }
+    .verbatim .vb-content { --vb-plate-pad: calc(var(--media-spacing) * 2); --vb-plate-gap: calc(var(--media-spacing) * 1); --vb-rail: calc(var(--media-spacing) * 8); }
     .verbatim .vb-sentence { font-size: calc(var(--media-spacing) * 3.6); --vb-line-height: 1.3; }
     .verbatim verbatim-transcript { padding-block: calc(var(--media-spacing) * 0.5); }
     .verbatim .vb-icons .vb-settings { display: none; }
@@ -711,6 +731,7 @@
   /* Touch: thumb-sized targets, the thumb stays visible, and a field iOS will not zoom into. */
   @media (pointer: coarse) {
     .verbatim .media-button { min-width: 44px; min-height: 44px; }
+    .verbatim .vb-quote { min-width: 44px; }
     .verbatim .media-time-slider { height: calc(var(--media-spacing) * 8); }
     .verbatim .media-time-slider-thumb { opacity: 1; scale: 1; }
     .verbatim verbatim-transcript { padding-block: calc(var(--media-spacing) * 2); }
@@ -725,6 +746,8 @@
     .verbatim .vb-word { transition: none; }
     .verbatim .vb-sentence[data-enter] { animation: none; }
     .verbatim .vb-word[data-state="current"] { background-size: 100% 2px, 100% 0.62em, 100% 0.62em; }
+    /* The copied sentence is marked without the sweep. */
+    .verbatim verbatim-transcript[data-quoted] .vb-word { animation: none; color: var(--vb-fg); background-size: 0 2px, 0 0.62em, 100% 0.62em; }
     .verbatim .vb-find,
     .verbatim .vb-find[data-open],
     .verbatim .vb-find-ticks i { transition: none; }
@@ -755,14 +778,20 @@
       --vb-field: Field;
     }
     .verbatim .vb-plate { border: 1px solid CanvasText; box-shadow: none; }
+    /* Pressed, pointed-at and focused buttons take the system highlight pair, glyph included. */
+    .verbatim .media-button:hover,
+    .verbatim .media-button:focus-visible,
+    .verbatim .media-button[aria-expanded="true"],
+    .verbatim .vb-quote[data-copied] .vb-quote-button { color: HighlightText; background: Highlight; }
     .verbatim .vb-word { forced-color-adjust: none; }
     .verbatim .vb-word[data-state="current"],
-    .verbatim .vb-word[data-match="active"] {
+    .verbatim verbatim-transcript .vb-word[data-match="active"] {
       color: HighlightText;
       background: Highlight;
       box-shadow: none;
     }
-    .verbatim .vb-word[data-match] { outline-color: Highlight; }
+    .verbatim verbatim-transcript .vb-word[data-match] { outline-color: Highlight; }
+    .verbatim verbatim-transcript[data-quoted] .vb-word { animation: none; }
     .verbatim .vb-find-field { border: 1px solid FieldText; }
     .verbatim .vb-find-input { color: FieldText; }
     .verbatim .vb-find-ticks i { background: CanvasText; box-shadow: none; forced-color-adjust: none; }

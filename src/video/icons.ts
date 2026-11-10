@@ -71,6 +71,9 @@ export const speechIcon = svg(`<path d="M3 3.5h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H
 export const switchesIcon = svg(`<path d="M2.5 5.5h13M2.5 12.5h13" ${stroke}/><circle cx="6.5" cy="5.5" r="2" fill="currentColor"/><circle cx="11.5" cy="12.5" r="2" fill="currentColor"/>`);
 export const qualityIcon = switchesIcon;
 export const searchIcon = svg(`<circle cx="7.75" cy="7.75" r="4.75" ${stroke}/><path d="m11.4 11.4 4.1 4.1" ${stroke}/>`);
+export const linkIcon = svg(
+  `<path d="M7.5 10.5a3 3 0 0 0 4.24 0l2.5-2.5A3 3 0 0 0 10 3.76l-.75.74" ${stroke}/><path d="M10.5 7.5a3 3 0 0 0-4.24 0l-2.5 2.5A3 3 0 0 0 8 14.24l.75-.74" ${stroke}/>`
+);
 export const closeIcon = svg(`<path d="m4.5 4.5 9 9m0-9-9 9" ${stroke}/>`);
 export const transcriptIcon = svg(`<path d="M3 4.5h12M3 8h8M3 11.5h12M3 15h6" ${stroke}/>`);
 export const spinnerIcon = svg(
@@ -87,6 +90,7 @@ registerIcons('verbatim', {
   check: checkIcon,
   chevron: chevronIcon,
   close: closeIcon,
+  link: linkIcon,
   'fullscreen-enter': fullscreenEnterIcon,
   'fullscreen-exit': fullscreenExitIcon,
   gear: gearIcon,

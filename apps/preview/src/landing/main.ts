@@ -16,3 +16,11 @@ for (const button of sizes) {
     for (const other of sizes) other.setAttribute('aria-pressed', String(other === button));
   });
 }
+
+// Links to a sentence (`#t=…`) are followed by the player itself; bring it into view when one is used.
+for (const link of document.querySelectorAll<HTMLAnchorElement>('a[href^="#t="]')) {
+  link.addEventListener('click', () => {
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    stage.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'center' });
+  });
+}

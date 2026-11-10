@@ -224,6 +224,12 @@ export class VerbatimTranscriptElement extends UIElement {
   #scrubWord = -1;
   #lastEdgeFlip = 0;
   #pendingSeek: number | null = null;
+  /** A position asked for before the media could seek (a shared link); shown at once, applied when it can be. */
+  #startAt: number | null = null;
+  #startRequested = false;
+  #startFrom = 0;
+  #startTimer = 0;
+  #quoteTimer = 0;
   #seekTimer = 0;
 
   // Previews: the sentence at the seek-bar pointer, or at a search match not yet jumped to
@@ -311,7 +317,8 @@ export class VerbatimTranscriptElement extends UIElement {
     if (time && Number.isFinite(time.duration) && time.duration > 0) {
       this.setAttribute('aria-valuemax', String(Math.round(time.duration)));
     }
-    this.#syncToTime(time?.currentTime ?? 0);
+    if (this.#startAt !== null) this.#applyStart();
+    this.#syncToTime(this.#startAt ?? time?.currentTime ?? 0);
     // Keep a smooth per-word fill while playing: the store ticks on timeupdate (~4 Hz), the
     // media element is continuous.
     const playing = this.#playback.value && !this.#playback.value.paused;
@@ -333,6 +340,57 @@ export class VerbatimTranscriptElement extends UIElement {
   }
 
   /** Matches of the last `search`, in spoken order. (`matches` is taken by Element.) */
+  /** The sentence on show: where it starts and what it says. Null when there is no transcript. */
+  quote(): { time: number; text: string } | null {
+    const s = this.#sentences[this.#index];
+    if (!s) return null;
+    return { time: s.start, text: s.words.map((w) => w.text).join(' ') };
+  }
+
+  /** Mark the sentence on show for a moment, the way a highlighter would. */
+  flashQuote(): void {
+    clearTimeout(this.#quoteTimer);
+    this.toggleAttribute('data-quoted', false);
+    void this.offsetWidth; // restart the animation when asked twice in a row
+    this.toggleAttribute('data-quoted', true);
+    this.#quoteTimer = window.setTimeout(() => this.toggleAttribute('data-quoted', false), 1000);
+  }
+
+  /**
+   * Open at a moment, as a shared link does. The sentence at that time is shown straight away and
+   * the media is moved there as soon as it can seek.
+   */
+  startAt(time: number): void {
+    if (!Number.isFinite(time) || time < 0) return;
+    clearTimeout(this.#startTimer);
+    this.#startAt = time;
+    this.#startRequested = false;
+    this.#findPreview = null;
+    this.#sliderPreview = null;
+    this.#applyStart();
+    this.#syncToTime(time);
+  }
+
+  #applyStart() {
+    const target = this.#startAt;
+    if (target === null) return;
+    if (!this.#startRequested) {
+      if (this.duration <= 0) return; // not seekable yet; update() tries again
+      this.#startRequested = true;
+      this.#startFrom = this.currentTime;
+      this.#pendingSeek = Math.min(target, Math.max(0, this.duration - 0.25));
+      this.#commitSeek();
+      // If the media never reports the move, stop holding the sentence.
+      this.#startTimer = window.setTimeout(() => (this.#startAt = null), 5000);
+      return;
+    }
+    // The media has taken the seek (or the viewer has moved on): follow the clock again.
+    if (this.currentTime !== this.#startFrom) {
+      clearTimeout(this.#startTimer);
+      this.#startAt = null;
+    }
+  }
+
   get results(): readonly VerbatimMatch[] {
     return this.#matches;
   }
@@ -987,6 +1045,7 @@ export class VerbatimTranscriptElement extends UIElement {
   }
 
   #requestSeek(time: number, immediate: boolean) {
+    this.#startAt = null; // the viewer has chosen a place; a pending link position no longer applies
     this.#pendingSeek = time;
     if (immediate) {
       clearTimeout(this.#seekTimer);

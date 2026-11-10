@@ -157,6 +157,21 @@
 </media-tooltip>
 </div>
 <div class="vb-row vb-row-bar">
+<verbatim-quote class="vb-quote">
+<button type="button" data-part="button" class="media-button vb-quote-button" id="vb-quote-trigger">
+<media-icon family="verbatim" name="link" class="media-button-icon vb-quote-link">
+</media-icon>
+<media-icon family="verbatim" name="check" class="media-button-icon vb-quote-check">
+</media-icon>
+<media-text class="vb-sr-only" token="verbatim.quote">Copy link to this sentence</media-text>
+</button>
+<span data-part="status" class="vb-sr-only" aria-live="polite">
+</span>
+<media-tooltip trigger="vb-quote-trigger" side="right" class="media-popup media-popup-safe-area media-tooltip-popup">
+<media-text class="vb-quote-tip" token="verbatim.quote">Copy link to this sentence</media-text>
+<media-text class="vb-quote-tip-done" token="verbatim.quote.copied">Link copied</media-text>
+</media-tooltip>
+</verbatim-quote>
 <media-time-slider class="media-time-slider" thumb-alignment="edge">
 <media-time-slider-chapters class="media-time-slider-chapters">
 <template>
