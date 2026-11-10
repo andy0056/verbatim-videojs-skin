@@ -39,10 +39,11 @@ code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-si
 .tool-link { font-size: 0.9rem; color: var(--ink-2); }
 .credit { margin: 0; font-size: 0.85rem; color: var(--ink-2); max-width: 80ch; }
 
-.tryit { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; }
+.tryit { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px 18px; }
 .try { border-top: 1px solid var(--rule); padding-top: 14px; }
 .try h2 { margin: 0 0 6px; font-family: "Source Serif 4", Georgia, serif; font-weight: 600; font-size: 1.15rem; }
 .try p { margin: 0; color: var(--ink-2); font-size: 0.95rem; }
+kbd { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.85em; padding: 0.1em 0.45em; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 5px; background: #fff; color: var(--ink); }
 
 .essay { max-width: 68ch; display: grid; gap: 14px; }
 .essay h2, .craft h2 { margin: 0; font-family: "Source Serif 4", Georgia, serif; font-weight: 600; font-size: clamp(1.4rem, 2.6vw, 1.9rem); line-height: 1.15; text-wrap: balance; }

@@ -79,8 +79,46 @@
 </media-tooltip>
 </media-controls-group>
 
-<!-- The reading plate. Row one is the sentence; row two is the bar. -->
+<!-- The reading plate. Find opens above; then the sentence row; then the bar. -->
 <div class="vb-plate">
+<verbatim-find class="vb-find" id="vb-find">
+<div class="vb-find-field" role="search">
+<media-icon family="verbatim" name="search" class="vb-find-glyph">
+</media-icon>
+<input data-part="input" class="vb-find-input" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+<span data-part="count" class="vb-find-count" aria-hidden="true">
+</span>
+<span data-part="status" class="vb-sr-only" aria-live="polite">
+</span>
+<button type="button" data-part="previous" class="media-button vb-find-step" id="vb-find-previous">
+<media-icon family="verbatim" name="chevron" class="media-button-icon vb-find-up">
+</media-icon>
+<media-text class="vb-sr-only" token="verbatim.find.previous">Previous match</media-text>
+</button>
+<media-tooltip trigger="vb-find-previous" side="top" class="media-popup media-popup-safe-area media-tooltip-popup">
+<media-text token="verbatim.find.previous">Previous match</media-text>
+<kbd class="media-tooltip-shortcut">⇧ ↵</kbd>
+</media-tooltip>
+<button type="button" data-part="next" class="media-button vb-find-step" id="vb-find-next">
+<media-icon family="verbatim" name="chevron" class="media-button-icon vb-find-down">
+</media-icon>
+<media-text class="vb-sr-only" token="verbatim.find.next">Next match</media-text>
+</button>
+<media-tooltip trigger="vb-find-next" side="top" class="media-popup media-popup-safe-area media-tooltip-popup">
+<media-text token="verbatim.find.next">Next match</media-text>
+<kbd class="media-tooltip-shortcut">↵</kbd>
+</media-tooltip>
+<button type="button" data-part="close" class="media-button vb-find-step" id="vb-find-close">
+<media-icon family="verbatim" name="close" class="media-button-icon">
+</media-icon>
+<media-text class="vb-sr-only" token="verbatim.find.close">Close find</media-text>
+</button>
+<media-tooltip trigger="vb-find-close" side="top" align="end" class="media-popup media-popup-safe-area media-tooltip-popup">
+<media-text token="verbatim.find.close">Close find</media-text>
+<kbd class="media-tooltip-shortcut">Esc</kbd>
+</media-tooltip>
+</div>
+</verbatim-find>
 <div class="vb-row vb-row-text">
 <media-play-button class="media-button media-play-button vb-play" id="vb-play-trigger">
 <media-icon family="verbatim" name="restart" class="media-button-icon-base media-play-button-restart-icon">
@@ -108,6 +146,15 @@
 <media-time class="media-time-duration-value" type="duration">
 </media-time>
 </media-time-group>
+<button type="button" class="media-button vb-find-trigger" id="vb-find-trigger" aria-controls="vb-find" aria-expanded="false">
+<media-icon family="verbatim" name="search" class="media-button-icon">
+</media-icon>
+<media-text class="vb-sr-only" token="verbatim.find">Find in video</media-text>
+</button>
+<media-tooltip trigger="vb-find-trigger" side="top" align="end" class="media-popup media-popup-safe-area media-tooltip-popup">
+<media-text token="verbatim.find">Find in video</media-text>
+<kbd class="media-tooltip-shortcut">/</kbd>
+</media-tooltip>
 </div>
 <div class="vb-row vb-row-bar">
 <media-time-slider class="media-time-slider" thumb-alignment="edge">
@@ -171,21 +218,20 @@
 <media-tooltip-shortcut class="media-tooltip-shortcut">
 </media-tooltip-shortcut>
 </media-tooltip>
-<button commandfor="vb-settings-popup" class="media-button vb-settings" id="vb-settings-trigger" aria-label="Settings">
+<button commandfor="vb-settings-popup" class="media-button vb-settings" id="vb-settings-trigger">
 <media-icon family="verbatim" name="gear" class="media-button-icon">
 </media-icon>
+<media-text class="media-settings-button-label" token="menu.settings">Settings</media-text>
 </button>
 <media-tooltip trigger="vb-settings-trigger" side="top" class="media-popup media-popup-safe-area media-tooltip-popup">
-<media-tooltip-label>
-Settings
-</media-tooltip-label>
+<media-text token="menu.settings">Settings</media-text>
 </media-tooltip>
 <media-menu side="top" align="end" class="media-popup media-popup-safe-area media-menu-popup" id="vb-settings-popup">
 <media-menu-content class="media-menu-content">
 <media-menu-item commandfor="vb-menu-speed" class="media-menu-item">
 <media-icon family="verbatim" name="speed" class="media-menu-trigger-icon">
 </media-icon>
-Speed
+<media-text token="menu.speed">Speed</media-text>
 <span class="media-menu-hint">
 <span data-part="value" class="media-menu-hint-label">
 </span>
@@ -193,45 +239,11 @@ Speed
 </media-icon>
 </span>
 </media-menu-item>
-<media-menu-item commandfor="vb-menu-captions" class="media-menu-item">
-<media-icon family="verbatim" name="captions-off" class="media-menu-trigger-icon">
-</media-icon>
-Captions
-<span class="media-menu-hint">
-<span data-part="value" class="media-menu-hint-label">
-</span>
-<media-icon family="verbatim" name="chevron" class="media-menu-forward-chevron">
-</media-icon>
-</span>
-</media-menu-item>
-<media-menu-item commandfor="vb-menu-quality" class="media-menu-item">
-<media-icon family="verbatim" name="switches" class="media-menu-trigger-icon">
-</media-icon>
-Quality
-<span class="media-menu-hint">
-<span data-part="value" class="media-menu-hint-label">
-</span>
-<media-icon family="verbatim" name="chevron" class="media-menu-forward-chevron">
-</media-icon>
-</span>
-</media-menu-item>
-<media-menu-item commandfor="vb-menu-audio" class="media-menu-item">
-<media-icon family="verbatim" name="speech" class="media-menu-trigger-icon">
-</media-icon>
-Audio
-<span class="media-menu-hint">
-<span data-part="value" class="media-menu-hint-label">
-</span>
-<media-icon family="verbatim" name="chevron" class="media-menu-forward-chevron">
-</media-icon>
-</span>
-</media-menu-item>
-</media-menu-content>
 <media-menu-content class="media-menu-content" id="vb-menu-speed">
 <media-menu-item class="media-menu-back-item">
 <media-icon family="verbatim" name="chevron" class="media-menu-back-chevron">
 </media-icon>
-Speed
+<media-text token="menu.speed">Speed</media-text>
 </media-menu-item>
 <media-menu-separator class="media-menu-separator">
 </media-menu-separator>
@@ -248,11 +260,22 @@ Speed
 </template>
 </media-playback-rate-radio-group>
 </media-menu-content>
+<media-menu-item commandfor="vb-menu-captions" class="media-menu-item">
+<media-icon family="verbatim" name="captions-off" class="media-menu-trigger-icon">
+</media-icon>
+<media-text token="menu.captions">Captions</media-text>
+<span class="media-menu-hint">
+<span data-part="value" class="media-menu-hint-label">
+</span>
+<media-icon family="verbatim" name="chevron" class="media-menu-forward-chevron">
+</media-icon>
+</span>
+</media-menu-item>
 <media-menu-content class="media-menu-content" id="vb-menu-captions">
 <media-menu-item class="media-menu-back-item">
 <media-icon family="verbatim" name="chevron" class="media-menu-back-chevron">
 </media-icon>
-Captions
+<media-text token="menu.captions">Captions</media-text>
 </media-menu-item>
 <media-menu-separator class="media-menu-separator">
 </media-menu-separator>
@@ -260,6 +283,8 @@ Captions
 <template>
 <media-menu-radio-item class="media-menu-radio-item">
 <span data-part="label">
+</span>
+<span data-part="badge" class="media-menu-badge">
 </span>
 <media-menu-item-indicator force-mount class="media-menu-indicator">
 <media-icon family="verbatim" name="check" class="media-menu-radio-icon">
@@ -269,11 +294,22 @@ Captions
 </template>
 </media-captions-radio-group>
 </media-menu-content>
+<media-menu-item commandfor="vb-menu-quality" class="media-menu-item">
+<media-icon family="verbatim" name="switches" class="media-menu-trigger-icon">
+</media-icon>
+<media-text token="menu.quality">Quality</media-text>
+<span class="media-menu-hint">
+<span data-part="value" class="media-menu-hint-label">
+</span>
+<media-icon family="verbatim" name="chevron" class="media-menu-forward-chevron">
+</media-icon>
+</span>
+</media-menu-item>
 <media-menu-content class="media-menu-content" id="vb-menu-quality">
 <media-menu-item class="media-menu-back-item">
 <media-icon family="verbatim" name="chevron" class="media-menu-back-chevron">
 </media-icon>
-Quality
+<media-text token="menu.quality">Quality</media-text>
 </media-menu-item>
 <media-menu-separator class="media-menu-separator">
 </media-menu-separator>
@@ -296,11 +332,22 @@ Quality
 </template>
 </media-quality-radio-group>
 </media-menu-content>
+<media-menu-item commandfor="vb-menu-audio" class="media-menu-item">
+<media-icon family="verbatim" name="speech" class="media-menu-trigger-icon">
+</media-icon>
+<media-text token="menu.audio">Audio</media-text>
+<span class="media-menu-hint">
+<span data-part="value" class="media-menu-hint-label">
+</span>
+<media-icon family="verbatim" name="chevron" class="media-menu-forward-chevron">
+</media-icon>
+</span>
+</media-menu-item>
 <media-menu-content class="media-menu-content" id="vb-menu-audio">
 <media-menu-item class="media-menu-back-item">
 <media-icon family="verbatim" name="chevron" class="media-menu-back-chevron">
 </media-icon>
-Audio
+<media-text token="menu.audio">Audio</media-text>
 </media-menu-item>
 <media-menu-separator class="media-menu-separator">
 </media-menu-separator>
@@ -316,6 +363,7 @@ Audio
 </media-menu-radio-item>
 </template>
 </media-audio-track-radio-group>
+</media-menu-content>
 </media-menu-content>
 </media-menu>
 <media-fullscreen-button class="media-button media-fullscreen-button" id="vb-fullscreen-trigger">

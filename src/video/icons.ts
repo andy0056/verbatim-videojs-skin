@@ -70,6 +70,8 @@ export const speedIcon = svg(`<path d="M2.5 11.5a6.5 6.5 0 1 1 13 0" ${stroke}/>
 export const speechIcon = svg(`<path d="M3 3.5h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H8l-3.5 3v-3H3a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1z" ${stroke}/>`);
 export const switchesIcon = svg(`<path d="M2.5 5.5h13M2.5 12.5h13" ${stroke}/><circle cx="6.5" cy="5.5" r="2" fill="currentColor"/><circle cx="11.5" cy="12.5" r="2" fill="currentColor"/>`);
 export const qualityIcon = switchesIcon;
+export const searchIcon = svg(`<circle cx="7.75" cy="7.75" r="4.75" ${stroke}/><path d="m11.4 11.4 4.1 4.1" ${stroke}/>`);
+export const closeIcon = svg(`<path d="m4.5 4.5 9 9m0-9-9 9" ${stroke}/>`);
 export const transcriptIcon = svg(`<path d="M3 4.5h12M3 8h8M3 11.5h12M3 15h6" ${stroke}/>`);
 export const spinnerIcon = svg(
   `<style>@keyframes vb-spin{to{transform:rotate(360deg)}}</style><path d="M9 2.5A6.5 6.5 0 1 1 2.5 9" ${stroke} style="transform-origin:9px 9px;animation:var(--media-spinner-animation, vb-spin .9s linear infinite)"/>`
@@ -84,6 +86,7 @@ registerIcons('verbatim', {
   'cast-exit': castExitIcon,
   check: checkIcon,
   chevron: chevronIcon,
+  close: closeIcon,
   'fullscreen-enter': fullscreenEnterIcon,
   'fullscreen-exit': fullscreenExitIcon,
   gear: gearIcon,
@@ -93,6 +96,7 @@ registerIcons('verbatim', {
   play: playIcon,
   quality: qualityIcon,
   restart: restartIcon,
+  search: searchIcon,
   seek: seekIcon,
   speech: speechIcon,
   speed: speedIcon,

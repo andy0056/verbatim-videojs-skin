@@ -3,8 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2317191d'/%3E%3Crect x='7' y='10' width='11' height='5' rx='1.5' fill='%23f2d97c'/%3E%3Crect x='20' y='10' width='5' height='5' rx='1.5' fill='%23777c86'/%3E%3Crect x='7' y='18' width='15' height='5' rx='1.5' fill='%23777c86'/%3E%3C/svg%3E" />
     <title>Verbatim — a Video.js v10 skin you can read</title>
-    <meta name="description" content="Verbatim is a Video.js v10 skin where the subtitle becomes the player. The sentence you are hearing is the control bar: drag along the words to scrub, click a word to jump." />
+    <meta name="description" content="Verbatim is a Video.js v10 skin where the subtitle becomes the player. The sentence you are hearing is the control bar: drag along the words to scrub, click a word to jump, press / to find any word in the video." />
     <meta property="og:title" content="Verbatim — the subtitle became the player" />
     <meta property="og:description" content="A Video.js v10 skin where the caption sentence is the control bar. Words fill as they are spoken; drag along them to scrub." />
     <meta property="og:type" content="website" />
@@ -36,10 +37,12 @@
       </section>
 
       <section class="tryit" aria-label="How to use the player">
-        <div class="try"><h2>Read it</h2><p>Spoken words are bright, upcoming words are dim, and the current word carries a highlighter stroke with a progress underline.</p></div>
-        <div class="try"><h2>Scrub it</h2><p>Press on any word and drag. Cross the end of the sentence to flip to the next one. Click a word to jump to it.</p></div>
+        <div class="try"><h2>Read it</h2><p>Spoken words are bright, upcoming words are dim, and a highlighter sweeps across the word being said.</p></div>
+        <div class="try"><h2>Scrub it</h2><p>Press on any word and drag. Cross the end of the sentence to turn to the next one. Click a word to jump to it.</p></div>
+        <div class="try"><h2>Find it</h2><p>Press <kbd>/</kbd> and type a word. Every place it is spoken gets a tick on the seek bar, and Enter walks from one to the next.</p></div>
         <div class="try"><h2>Preview it</h2><p>Point at the thin seek bar and the sentence spoken at that moment takes the stage, set as a quotation, with its time and chapter above. No popup over the picture.</p></div>
         <div class="try"><h2>Key it</h2><p>Tab to the sentence: ← → step by word, ↑ ↓ by sentence, Home and End. The thin track is a standard time slider with chapter segments; J, K, L, M, F, C and the numbers work as usual.</p></div>
+        <div class="try"><h2>Rest it</h2><p>Stop moving and the plate folds down to a single subtitle that keeps filling word by word. Move again and the controls unfold from it.</p></div>
       </section>
 
       <section class="essay">
@@ -56,8 +59,11 @@
           <li><b>Colour carries the transparency.</b> Surfaces use dark colour at partial alpha, never <code>opacity</code>, so glyphs and text keep full contrast.</li>
           <li><b>Concentric radii.</b> The plate radius is the control radius plus the plate padding, so corners sit evenly.</li>
           <li><b>Tabular numerals</b> wherever digits tick, including the eyebrow and the time readout.</li>
+          <li><b>Two lines, always.</b> Sentences are cut to the width of the player, so the plate keeps one height from a phone to a desktop and never jumps while you read.</li>
+          <li><b>Readable on anything.</b> Unspoken words hold at least 4.5:1 against the plate, even over a white frame.</li>
+          <li><b>Translated.</b> Every label goes through Video.js's own translations, and the sentence takes its reading direction from the transcript, not the page.</li>
           <li><b>Own type.</b> A book serif for the sentence, a UI sans for everything else; the host page's font is never inherited. Fallbacks are system serifs, and nothing is downloaded by the skin.</li>
-          <li><b>Motion with restraint.</b> Words switch state in 150 ms; menus open from their triggers and close faster than they open. <code>prefers-reduced-motion</code> removes the transitions.</li>
+          <li><b>Motion with restraint.</b> Words switch state in 150 ms and sentences turn in the direction you are travelling; menus open from their triggers and close faster than they open. <code>prefers-reduced-motion</code> removes all of it.</li>
           <li><b>Preferences respected.</b> <code>prefers-contrast: more</code> and <code>prefers-reduced-transparency</code> make the plate solid; <code>forced-colors</code> maps the highlighter to the system <code>Highlight</code>.</li>
           <li><b>Public knobs.</b> <code>--media-accent-color</code>, <code>--media-accent-text-color</code>, <code>--media-border-radius</code>, <code>--media-font-family</code> and <code>--media-scale-unit</code> work as on the packaged skins, plus <code>--vb-sentence-font</code> and <code>--vb-plate</code>.</li>
         </ul>

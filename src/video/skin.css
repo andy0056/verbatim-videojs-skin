@@ -8,6 +8,8 @@
    Verbatim knobs:
      --vb-sentence-font      typeface for the spoken sentence (default: a book serif)
      --vb-plate              background of the reading plate
+   Parts: the reading plate (.vb-plate) holds the find field (verbatim-find), the sentence row
+   (verbatim-transcript) and the bar row (time slider and buttons).
    ============================================================================= */
 
 @layer verbatim {
@@ -22,16 +24,21 @@
 
     /* Surfaces: colour carries the transparency, text and icons stay opaque. */
     --vb-plate: oklch(9% 0.012 260 / 0.66);
+    --vb-plate-idle: oklch(9% 0.012 260 / 0.8);               /* the subtitle has no scrim behind it */
     --vb-plate-blur: blur(14px) saturate(120%);
     --vb-plate-pad: calc(var(--media-spacing) * 3);           /* 12px */
+    --vb-plate-gap: calc(var(--media-spacing) * 2);           /* 8px between the plate's rows */
     --vb-control-radius: calc(var(--media-spacing) * 2.5);    /* 10px inner radius */
-    --vb-plate-radius: calc(var(--vb-control-radius) + var(--vb-plate-pad)); /* 22px: outer = inner + padding (concentric) */
 
     --vb-fg: var(--media-foreground);
-    --vb-fg-dim: color-mix(in oklab, var(--media-foreground) 50%, transparent);
+    --vb-fg-dim: color-mix(in oklab, var(--media-foreground) 56%, transparent); /* unspoken words: 4.5:1 or better even over white video */
     --vb-fg-muted: color-mix(in oklab, var(--media-foreground) 64%, transparent);
     --vb-accent: var(--media-primary);
-    --vb-accent-wash: color-mix(in oklab, var(--media-primary) 34%, transparent);
+    --vb-accent-wash: color-mix(in oklab, var(--media-primary) 36%, transparent);
+    --vb-accent-rest: color-mix(in oklab, var(--media-primary) 14%, transparent);
+    --vb-field: color-mix(in oklab, var(--media-foreground) 10%, transparent);
+    --vb-line-height: 1.32;
+    --vb-thumb: calc(var(--media-spacing) * 3.25);            /* seek thumb, 13px */
 
     --media-control-radius: var(--vb-control-radius);
     --media-popup-radius: calc(var(--media-spacing) * 3);
@@ -112,9 +119,9 @@
     inset-inline: var(--vb-plate-pad);
     bottom: var(--vb-plate-pad);
     display: grid;
-    gap: calc(var(--media-spacing) * 2);
+    gap: var(--vb-plate-gap);
     padding: var(--vb-plate-pad);
-    border-radius: var(--vb-plate-radius);
+    border-radius: calc(var(--vb-control-radius) + var(--vb-plate-pad)); /* outer = inner + padding */
     background: var(--vb-plate);
     -webkit-backdrop-filter: var(--vb-plate-blur);
     backdrop-filter: var(--vb-plate-blur);
@@ -125,37 +132,59 @@
       opacity var(--media-duration-controls) ease,
       translate var(--media-duration-controls) ease;
   }
-  /* Idle during playback: the plate becomes a subtitle. The bar, buttons, eyebrow and time fold away;
-     the sentence stays, quieter, and any pointer or key brings the controls back. */
-  .verbatim .video-controls-content:not([data-visible]) .vb-plate {
-    pointer-events: none;
-    padding: calc(var(--media-spacing) * 2) calc(var(--media-spacing) * 3);
-    gap: 0;
-    box-shadow: none;
-  }
-  .verbatim .video-controls-content:not([data-visible]) .vb-row-bar,
-  .verbatim .video-controls-content:not([data-visible]) .vb-play,
-  .verbatim .video-controls-content:not([data-visible]) .vb-time,
-  .verbatim .video-controls-content:not([data-visible]) .vb-eyebrow,
-  .verbatim .video-controls-content:not([data-visible]) .vb-tip {
-    display: none;
-  }
-  .verbatim .video-controls-content:not([data-visible]) .vb-row-text { grid-template-columns: minmax(0, 1fr); }
-  .verbatim .video-controls-content:not([data-visible]) verbatim-transcript { padding-block: 0; }
-  .verbatim .video-controls-content:not([data-visible]) .vb-sentence { text-align: center; }
-  /* With nothing to read, the idle plate hides completely. */
-  .verbatim .video-controls-content:not([data-visible]) .vb-plate:has(verbatim-transcript[data-empty]) {
-    opacity: 0;
-    translate: 0 var(--media-hidden-offset);
+
+  /* Idle during playback: the plate becomes a subtitle. The bar, buttons, eyebrow and time step away
+     and the sentence stays, centred, with the same line breaks (it keeps the width it was measured
+     at). Any pointer or key brings the controls back. Controls that can hold focus are faded rather
+     than removed, so a focused button keeps the keyboard; while one shows a focus ring, nothing folds. */
+  .verbatim .video-controls-content:not([data-visible]):not(:has(:focus-visible)) {
+    --vb-plate: var(--vb-plate-idle);
+    .vb-plate {
+      pointer-events: none;
+      width: fit-content;
+      max-width: calc(100% - var(--vb-plate-pad) * 2);
+      margin-inline: auto;
+      padding: calc(var(--media-spacing) * 2) calc(var(--media-spacing) * 3.5);
+      gap: 0;
+      border-radius: calc(var(--media-spacing) * 3.5);
+      box-shadow: none;
+    }
+    .vb-row-bar,
+    .vb-play,
+    .vb-find-trigger,
+    .vb-find {
+      position: absolute;
+      inset-block-end: 0;
+      inset-inline-start: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .vb-time,
+    .vb-eyebrow,
+    .vb-tip { display: none; }
+    .vb-row-text { grid-template-columns: minmax(0, 1fr); }
+    verbatim-transcript { padding-block: 0; }
+    .vb-sentence {
+      width: fit-content;
+      max-width: min(100%, var(--vb-sentence-width, 100%));
+      min-height: 0;
+      margin-inline: auto;
+      text-align: center;
+    }
+    /* With nothing to read, the idle plate hides completely. */
+    .vb-plate:has(verbatim-transcript[data-empty]) {
+      opacity: 0;
+      translate: 0 var(--media-hidden-offset);
+    }
   }
 
   .verbatim .vb-row {
     display: grid;
     align-items: center;
-    gap: calc(var(--media-spacing) * 2);
+    gap: var(--vb-plate-gap);
     min-width: 0;
   }
-  .verbatim .vb-row-text { grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; }
+  .verbatim .vb-row-text { grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: start; }
   .verbatim .vb-row-bar  { grid-template-columns: minmax(0, 1fr) auto; }
 
   /* ---------------------------------------------------------------- buttons */
@@ -216,8 +245,12 @@
     opacity: 0;
     scale: var(--media-hidden-playback-scale);
     pointer-events: none;
+    visibility: hidden; /* out of the tab order once it has faded */
+    transition: opacity var(--media-duration-slow) ease, scale var(--media-duration-slow) ease, visibility 0s linear var(--media-duration-slow);
   }
   .verbatim .vb-center .media-button .media-play-button-play-icon { translate: 2px 0; }
+  /* The plate grows when the find field opens; the centre button steps aside rather than collide. */
+  .verbatim:has(.vb-find[data-open]) .vb-center { visibility: hidden; }
 
   /* ---------------------------------------------------------------- transcript */
   .verbatim verbatim-transcript {
@@ -256,44 +289,71 @@
     display: block;
     font-family: var(--vb-sentence-font);
     font-size: calc(var(--media-spacing) * 4.75);         /* 19px, scales with the player */
-    line-height: 1.32;
+    line-height: var(--vb-line-height);
     font-weight: 450;
     letter-spacing: 0.002em;
     text-wrap: pretty;
-    max-height: calc(1.32em * 2);
-    overflow: hidden;
+    /* Sentences are cut to fit two lines; holding two lines keeps the plate from changing height. */
+    min-height: calc(var(--vb-line-height) * 2em);
     color: var(--vb-fg);
   }
-  @keyframes vb-sentence-enter {
-    from { opacity: 0.35; translate: 0 3px; }
-    to { opacity: 1; translate: 0 0; }
+  /* A new sentence turns like a line on a teleprompter: up from below going forward, down from above going back. */
+  @keyframes vb-sentence-forward {
+    from { opacity: 0.3; translate: 0 0.28em; }
   }
-  .verbatim .vb-sentence[data-enter] { animation: vb-sentence-enter var(--media-duration-slow) ease-out; }
+  @keyframes vb-sentence-back {
+    from { opacity: 0.3; translate: 0 -0.28em; }
+  }
+  .verbatim .vb-sentence[data-enter="forward"] { animation: vb-sentence-forward var(--media-duration-slow) ease-out; }
+  .verbatim .vb-sentence[data-enter="back"] { animation: vb-sentence-back var(--media-duration-slow) ease-out; }
 
+  /* Words. Three layers of background do the marking, so a word never changes size:
+       1 an underline that grows as the word is spoken
+       2 a highlighter stroke that sweeps with it
+       3 a faint resting stroke, so the current word is marked even at its first instant, or paused */
   .verbatim .vb-word {
     display: inline;
     color: var(--vb-fg-dim);
     border-radius: 0.2em;
-    transition: color var(--media-duration) ease, background-color var(--media-duration) ease;
-    /* progress underline: grows with --vb-word-progress on the current word */
-    background-image: linear-gradient(var(--vb-accent), var(--vb-accent));
+    transition: color var(--media-duration) ease;
+    background-image:
+      linear-gradient(var(--vb-accent), var(--vb-accent)),
+      linear-gradient(var(--vb-accent-wash), var(--vb-accent-wash)),
+      linear-gradient(var(--vb-accent-rest), var(--vb-accent-rest));
     background-repeat: no-repeat;
     background-position: 0 100%;
-    background-size: 0 2px;
+    background-size: 0 2px, 0 0.62em, 0 0.62em;
   }
+  .verbatim .vb-word:dir(rtl) { background-position: 100% 100%; } /* the highlighter sweeps the way the word reads */
   .verbatim .vb-word[data-state="past"] { color: var(--vb-fg); }
   .verbatim .vb-word[data-state="current"] {
     color: var(--vb-fg);
-    box-shadow: inset 0 -0.55em 0 0 var(--vb-accent-wash);  /* highlighter stroke */
-    background-size: calc(var(--vb-word-progress, 0) * 100%) 2px;
+    background-size:
+      calc(var(--vb-word-progress, 0) * 100%) 2px,
+      calc(var(--vb-word-progress, 0) * 100%) 0.62em,
+      100% 0.62em;
   }
   .verbatim .vb-word[data-hover] { text-decoration: underline dotted var(--vb-fg-muted); text-underline-offset: 0.18em; }
   .verbatim verbatim-transcript[data-gap] .vb-word[data-state="past"] { color: var(--vb-fg-muted); }
 
-  /* Previewing from the seek bar: the sentence at the pointer, set as a quotation. */
+  /* Previewing (the seek-bar pointer, or a search match not yet jumped to): the sentence at that
+     moment, set as a quotation. */
   .verbatim verbatim-transcript[data-previewing] .vb-sentence { font-style: italic; }
-  .verbatim verbatim-transcript[data-previewing] .vb-word { color: var(--vb-fg-muted); box-shadow: none; background-size: 0 2px; }
+  .verbatim verbatim-transcript[data-previewing] .vb-word { color: var(--vb-fg-muted); background-size: 0 2px, 0 0.62em, 0 0.62em; }
   .verbatim verbatim-transcript[data-previewing] .vb-eyebrow { color: var(--vb-accent); }
+
+  /* Search matches are boxed; the selected one is filled. Shape tells them from the spoken word. */
+  .verbatim .vb-word[data-match] {
+    color: var(--vb-fg);
+    outline: 1.5px solid var(--vb-accent);
+    outline-offset: 1px;
+  }
+  .verbatim .vb-word[data-match="active"] {
+    color: var(--media-primary-foreground);
+    background-image: linear-gradient(var(--vb-accent), var(--vb-accent));
+    background-size: 100% 100%;
+    box-shadow: 0 0 0 1px var(--vb-accent);
+  }
 
   .verbatim .vb-tip {
     position: absolute;
@@ -433,8 +493,8 @@
     position: absolute;
     top: 50%;
     left: var(--media-slider-fill, 0%);
-    width: calc(var(--media-spacing) * 3.25);
-    height: calc(var(--media-spacing) * 3.25);
+    width: var(--vb-thumb);
+    height: var(--vb-thumb);
     translate: -50% -50%;
     border-radius: 50%;
     background: var(--vb-fg);
@@ -443,6 +503,10 @@
     scale: 0.6;
     transition: opacity var(--media-duration) ease, scale var(--media-duration) ease;
   }
+  /* The scaffold centres the thumb with transform; this skin does it with translate, so that one is
+     switched off. Kept as its own rule: minifiers fold transform, translate and scale in one rule
+     into a single transform, which would stop the hover scale from working. */
+  .verbatim .media-time-slider > .media-time-slider-thumb { transform: none; }
   .verbatim .media-time-slider[data-dragging] .media-time-slider-thumb { left: var(--media-slider-pointer, 0%); }
   .verbatim .media-time-slider:is(:hover, [data-dragging], [data-pointing]) .media-time-slider-thumb,
   .verbatim .media-time-slider-thumb:focus-visible { opacity: 1; scale: 1; }
@@ -452,37 +516,6 @@
   }
 
   .verbatim .media-time-slider-preview { display: none; } /* the sentence row is the preview */
-  .verbatim .media-time-slider-preview-unused {
-    position: absolute;
-    bottom: 100%;
-    left: var(--media-slider-pointer, 0%);
-    translate: -50% calc(var(--media-spacing) * -0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity var(--media-duration) ease;
-  }
-  .verbatim .media-time-slider:is([data-pointing], [data-dragging]) .media-time-slider-preview { opacity: 1; }
-  .verbatim .media-time-slider-preview-meta {
-    display: flex;
-    align-items: baseline;
-    gap: 0.5em;
-    padding: calc(var(--media-spacing) * 1) calc(var(--media-spacing) * 1.75);
-    border-radius: calc(var(--media-spacing) * 1.5);
-    background: var(--media-popover);
-    color: var(--media-popover-foreground);
-    box-shadow: var(--media-shadow-tooltip);
-    -webkit-backdrop-filter: var(--media-backdrop-filter-surface);
-    backdrop-filter: var(--media-backdrop-filter-surface);
-    font-size: calc(var(--media-spacing) * 2.75);
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-  }
-  .verbatim .media-time-slider-chapter-title { color: var(--vb-fg-muted); }
-  .verbatim .media-time-slider-chapter-title:empty { display: none; }
   .verbatim .media-slider-thumbnail { display: none; } /* storyboards are a later addition */
 
   /* Device buttons only when the platform offers them. */
@@ -528,62 +561,212 @@
   .verbatim .media-volume-slider-thumb { background: var(--vb-fg); border-radius: 50%; }
   .verbatim .media-volume-slider-track { border-radius: 2px; }
 
+  /* ---------------------------------------------------------------- find in video */
+  /* The field opens as the plate's first row. Closed it has no height and is inert. */
+  .verbatim .vb-find {
+    display: grid;
+    grid-template-rows: 0fr;
+    margin-bottom: calc(var(--vb-plate-gap) * -1);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      grid-template-rows var(--media-duration) ease,
+      margin-bottom var(--media-duration) ease,
+      opacity var(--media-duration-fast) ease,
+      visibility 0s linear var(--media-duration);
+  }
+  .verbatim .vb-find[data-open] {
+    grid-template-rows: 1fr;
+    margin-bottom: 0;
+    opacity: 1;
+    visibility: visible;
+    transition:
+      grid-template-rows var(--media-duration-slow) ease,
+      margin-bottom var(--media-duration-slow) ease,
+      opacity var(--media-duration-slow) ease,
+      visibility 0s;
+  }
+  .verbatim .vb-find-field {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto auto;
+    align-items: center;
+    gap: calc(var(--media-spacing) * 0.5);
+    min-height: 0;
+    overflow: hidden;
+    padding-inline: calc(var(--media-spacing) * 2.5) calc(var(--media-spacing) * 1);
+    border-radius: var(--vb-control-radius);
+    background: var(--vb-field);
+  }
+  .verbatim .vb-find-field:has(.vb-find-input:focus-visible) {
+    outline: 2px solid var(--media-ring);
+    outline-offset: -2px;
+  }
+  .verbatim .vb-find-glyph {
+    width: calc(var(--media-spacing) * 4);
+    height: calc(var(--media-spacing) * 4);
+    color: var(--vb-fg-muted);
+  }
+  .verbatim .vb-find-input {
+    appearance: none;
+    min-width: 0;
+    height: calc(var(--media-spacing) * 9);
+    margin: 0;
+    padding: 0 calc(var(--media-spacing) * 1.5);
+    border: 0;
+    border-radius: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--vb-fg);
+    caret-color: var(--vb-accent);
+    font: 500 calc(var(--media-spacing) * 3.5) / 1.2 var(--media-font-family);
+    letter-spacing: 0.005em;
+  }
+  .verbatim .vb-find-input::placeholder { color: var(--vb-fg-muted); opacity: 1; }
+  .verbatim .vb-find-input::selection { background: var(--vb-accent-wash); }
+  .verbatim .vb-find-input::-webkit-search-cancel-button,
+  .verbatim .vb-find-input::-webkit-search-decoration { display: none; }
+  .verbatim .vb-find-count {
+    padding-inline: calc(var(--media-spacing) * 1.5);
+    font: calc(var(--media-spacing) * 3) / 1 var(--media-font-family);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--vb-fg-muted);
+  }
+  .verbatim .vb-find[data-empty] .vb-find-count { color: var(--vb-fg); }
+  .verbatim .vb-find-count:empty { display: none; }
+  .verbatim .vb-find .vb-find-step {
+    width: calc(var(--media-spacing) * 7);
+    height: calc(var(--media-spacing) * 7);
+    border-radius: calc(var(--vb-control-radius) - var(--media-spacing) * 1); /* concentric with the field */
+  }
+  .verbatim .vb-find .vb-find-step:focus-visible { outline-offset: -2px; }
+  .verbatim .vb-find-up { rotate: -90deg; }
+  .verbatim .vb-find-down { rotate: 90deg; }
+  .verbatim .vb-find-trigger[aria-expanded="true"] { background: var(--media-muted); }
+  .verbatim .vb-row-text:has(verbatim-transcript[data-empty]) .vb-find-trigger { display: none; }
+
+  /* One tick on the seek bar for every place the word is spoken, where the thumb will stand. */
+  .verbatim .vb-find-ticks {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .verbatim .vb-find-ticks i {
+    position: absolute;
+    top: 50%;
+    left: calc(var(--vb-thumb) / 2 + var(--vb-tick, 0) * (100% - var(--vb-thumb)));
+    width: 2px;
+    height: calc(var(--media-spacing) * 2.25);
+    translate: -50% -50%;
+    border-radius: 1px;
+    background: var(--vb-fg);
+    box-shadow: 0 0 0 1px oklch(0% 0 0 / 0.5);
+    transition: height var(--media-duration) ease;
+  }
+  .verbatim .vb-find-ticks i[data-current] {
+    width: 3px;
+    height: calc(var(--media-spacing) * 4);
+    background: var(--vb-accent);
+  }
+
+  /* ---------------------------------------------------------------- tooltips */
+  .verbatim .media-tooltip-popup {
+    --media-tooltip-side-offset: calc(var(--media-spacing) * 2);
+    padding: calc(var(--media-spacing) * 1.25) calc(var(--media-spacing) * 2);
+    border-radius: calc(var(--media-spacing) * 2);
+    font-size: calc(var(--media-spacing) * 3);
+    line-height: 1.2;
+  }
+  .verbatim .media-tooltip-shortcut {
+    padding: 0.15em 0.4em;
+    border-radius: calc(var(--media-spacing) * 1);
+    font-size: calc(var(--media-spacing) * 2.6);
+    font-variant-numeric: tabular-nums;
+  }
+
   /* ---------------------------------------------------------------- narrow players */
   @container media-root (width < 42rem) {
-    .verbatim .vb-plate { --vb-plate-pad: calc(var(--media-spacing) * 2.5); gap: calc(var(--media-spacing) * 1.5); }
+    .verbatim .vb-content { --vb-plate-pad: calc(var(--media-spacing) * 2.5); --vb-plate-gap: calc(var(--media-spacing) * 1.5); }
     .verbatim .vb-sentence { font-size: calc(var(--media-spacing) * 4); }
     .verbatim .vb-eyebrow { display: none; }
-    .verbatim .vb-row-text { grid-template-columns: auto minmax(0, 1fr); align-items: center; }
+    .verbatim .vb-row-text { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
     .verbatim .vb-time { display: none; }
     .verbatim .vb-play { width: calc(var(--media-spacing) * 9); height: calc(var(--media-spacing) * 9); }
     .verbatim .vb-icons .media-captions-button { display: none; }
     .verbatim .vb-top .media-pip-button { display: none; }
+    /* The plate covers the middle of a small player, and its own play button is always in reach. */
+    .verbatim .vb-center { display: none; }
   }
   @container media-root (width < 24rem) {
-    .verbatim .vb-plate { --vb-plate-pad: calc(var(--media-spacing) * 2); gap: calc(var(--media-spacing) * 1); }
-    .verbatim .vb-sentence { font-size: calc(var(--media-spacing) * 3.6); line-height: 1.3; }
+    .verbatim .vb-content { --vb-plate-pad: calc(var(--media-spacing) * 2); --vb-plate-gap: calc(var(--media-spacing) * 1); }
+    .verbatim .vb-sentence { font-size: calc(var(--media-spacing) * 3.6); --vb-line-height: 1.3; }
     .verbatim verbatim-transcript { padding-block: calc(var(--media-spacing) * 0.5); }
     .verbatim .vb-icons .vb-settings { display: none; }
     .verbatim .vb-top { display: none; }
     .verbatim .media-button { width: calc(var(--media-spacing) * 8); height: calc(var(--media-spacing) * 8); }
+    .verbatim .vb-find .vb-find-step { width: calc(var(--media-spacing) * 7); height: calc(var(--media-spacing) * 7); }
+    .verbatim .vb-find-count { padding-inline: calc(var(--media-spacing) * 0.5); }
   }
-  .verbatim .vb-play-compact { display: none; }
 
-  /* Touch: thumb-sized targets, the thumb stays visible. */
+  /* Touch: thumb-sized targets, the thumb stays visible, and a field iOS will not zoom into. */
   @media (pointer: coarse) {
     .verbatim .media-button { min-width: 44px; min-height: 44px; }
     .verbatim .media-time-slider { height: calc(var(--media-spacing) * 8); }
     .verbatim .media-time-slider-thumb { opacity: 1; scale: 1; }
     .verbatim verbatim-transcript { padding-block: calc(var(--media-spacing) * 2); }
+    .verbatim .vb-find-input { height: 44px; font-size: max(16px, calc(var(--media-spacing) * 3.5)); }
+    .verbatim .vb-find .vb-find-step { min-width: 40px; min-height: 44px; }
   }
 
   /* ---------------------------------------------------------------- preferences */
+  /* The skin's motion tokens already collapse under reduced motion; these are the parts that move
+     by other means. The highlighter stops sweeping and marks the whole word. */
   @media (prefers-reduced-motion: reduce) {
     .verbatim .vb-word { transition: none; }
     .verbatim .vb-sentence[data-enter] { animation: none; }
-    .verbatim .vb-word[data-state="current"] { background-size: 100% 2px; }
-    .verbatim .media-time-slider-chapter { transition: none; }
+    .verbatim .vb-word[data-state="current"] { background-size: 100% 2px, 100% 0.62em, 100% 0.62em; }
+    .verbatim .vb-find,
+    .verbatim .vb-find[data-open],
+    .verbatim .vb-find-ticks i { transition: none; }
   }
   @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
     .verbatim {
       --vb-plate: var(--media-background);
+      --vb-plate-idle: var(--media-background);
       --vb-plate-blur: none;
-      --vb-fg-dim: color-mix(in oklab, var(--media-foreground) 60%, transparent);
+      --vb-fg-dim: color-mix(in oklab, var(--media-foreground) 62%, transparent);
+      --vb-fg-muted: color-mix(in oklab, var(--media-foreground) 78%, transparent);
+      --vb-field: color-mix(in oklab, var(--media-foreground) 16%, transparent);
     }
     .verbatim .vb-backdrop { display: none; }
+    .verbatim .vb-find-field { box-shadow: inset 0 0 0 1px var(--vb-fg-muted); }
   }
   @media (forced-colors: active) {
     .verbatim {
       --vb-plate: Canvas;
+      --vb-plate-idle: Canvas;
       --vb-plate-blur: none;
       --vb-fg: CanvasText;
       --vb-fg-dim: GrayText;
-      --vb-fg-muted: GrayText;
+      --vb-fg-muted: CanvasText;
       --vb-accent: Highlight;
       --vb-accent-wash: Highlight;
+      --vb-accent-rest: Highlight;
+      --vb-field: Field;
     }
     .verbatim .vb-plate { border: 1px solid CanvasText; box-shadow: none; }
-    .verbatim .vb-word[data-state="current"] { color: HighlightText; background-color: Highlight; box-shadow: none; }
+    .verbatim .vb-word { forced-color-adjust: none; }
+    .verbatim .vb-word[data-state="current"],
+    .verbatim .vb-word[data-match="active"] {
+      color: HighlightText;
+      background: Highlight;
+      box-shadow: none;
+    }
+    .verbatim .vb-word[data-match] { outline-color: Highlight; }
+    .verbatim .vb-find-field { border: 1px solid FieldText; }
+    .verbatim .vb-find-input { color: FieldText; }
+    .verbatim .vb-find-ticks i { background: CanvasText; box-shadow: none; forced-color-adjust: none; }
+    .verbatim .vb-find-ticks i[data-current] { background: Highlight; }
     .verbatim .media-time-slider-track { background: GrayText; }
     .verbatim .media-time-slider-fill { background: Highlight; }
     .verbatim .media-time-slider-thumb { background: CanvasText; }

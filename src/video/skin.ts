@@ -70,3 +70,4 @@ import '@videojs/html/ui/seek-indicator-value';
 // Verbatim's own parts.
 import './icons';
 import './verbatim-transcript';
+import './verbatim-find';
