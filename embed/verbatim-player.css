@@ -1,0 +1,25 @@
+/* The element is the box; the player elements inside only provide state. */
+@layer verbatim {
+  verbatim-player {
+    display: block;
+    aspect-ratio: 16 / 9;
+    line-height: normal; /* the skin sets its own; a page's body line-height should not leak into controls */
+  }
+  verbatim-player > media-i18n,
+  verbatim-player video-player {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+/* A shield for pages that reset elements outside any cascade layer (`* { margin: 0; padding: 0 }`,
+   `button { background: none }`, `:focus-visible { … }`). Such rules beat the skin's layered ones
+   whatever their specificity. Inside the player every property is handed back to the layers, so the
+   skin draws as designed. The unused id only raises this rule above ordinary page selectors; custom
+   properties are untouched, so a page can still set the skin's public ones. */
+:is(verbatim-player, #verbatim-host-shield) *,
+:is(verbatim-player, #verbatim-host-shield) *::before,
+:is(verbatim-player, #verbatim-host-shield) *::after {
+  all: revert-layer;
+}

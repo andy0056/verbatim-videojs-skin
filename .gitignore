@@ -7,3 +7,4 @@ dist
 .vercel
 .netlify
 .wrangler
+dist-embed

@@ -47,6 +47,28 @@ The preview streams from Mux. `apps/preview/src/frame/player.ts` holds a short l
 
 Import `src/video/skin.ts` once, then paste the markup from `src/video/skin.html` around your media component inside a `<video-player>`, replacing the placeholder comment. Give the media a `kind="captions"` (or `subtitles`) `<track>`; a `kind="chapters"` track adds chapter segments and the eyebrow label.
 
+## Put it on a site
+
+`npm run build:embed` writes `dist-embed/`: one script, one stylesheet and the translation files. Copy the folder to your site and use the element.
+
+```html
+<link rel="stylesheet" href="/verbatim/verbatim-player.css" />
+<script type="module" src="/verbatim/verbatim-player.js"></script>
+
+<verbatim-player
+  playback-id="YOUR_MUX_PLAYBACK_ID"
+  transcript="/captions.vtt"
+  chapters="/chapters.vtt"
+  poster-time="19"
+  video-title="A title"
+  style="--media-accent-color: #ceb680; --media-font-family: Poppins, sans-serif; --vb-sentence-font: Lora, serif"
+></verbatim-player>
+```
+
+Use `src` instead of `playback-id` for a plain video file. The fonts, the accent and the corner radius are public custom properties, set on the element or anything around it. The embed stylesheet also shields the player from page-wide resets written outside cascade layers (`* { margin: 0; padding: 0 }` and the like), which would otherwise beat the skin's layered styles.
+
+It runs this way on [anirudhthakur.work/verbatim](https://anirudhthakur.work/verbatim), in that site's own type and colour.
+
 ## Where things live
 
 - `src/video/skin.html`: the layout. Device buttons top-right; the reading plate at the bottom with the sentence row and the bar row.

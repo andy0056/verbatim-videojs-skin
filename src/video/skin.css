@@ -15,8 +15,10 @@
 @layer verbatim {
   .verbatim {
     /* Own font stacks: the skin never inherits the host page's font. */
-    --media-font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    --vb-sentence-font: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    /* Fonts are read through these two, so a site can set --media-font-family or --vb-sentence-font
+       on the player or anything around it. Declaring those here would shut such a setting out. */
+    --vb-ui-font: var(--media-font-family, Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+    --vb-read-font: var(--vb-sentence-font, "Source Serif 4", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif);
 
     /* Accent: a soft highlighter. contrast-color() picks the text colour on it where supported. */
     --media-default-accent-color: oklch(91% 0.11 92);
@@ -51,7 +53,7 @@
   .verbatim.media-container {
     border-radius: var(--media-video-border-radius);
     background: #000;
-    font-family: var(--media-font-family);
+    font-family: var(--vb-ui-font);
   }
   .verbatim.media-container:focus-visible {
     outline: 2px solid var(--media-ring);
@@ -274,7 +276,7 @@
 
   .verbatim .vb-eyebrow {
     display: block;
-    font-family: var(--media-font-family);
+    font-family: var(--vb-ui-font);
     font-size: calc(var(--media-spacing) * 2.6);          /* ~10.4px */
     line-height: 1.2;
     letter-spacing: 0.08em;
@@ -288,7 +290,7 @@
   }
   .verbatim .vb-sentence {
     display: block;
-    font-family: var(--vb-sentence-font);
+    font-family: var(--vb-read-font);
     font-size: calc(var(--media-spacing) * 4.75);         /* 19px, scales with the player */
     line-height: var(--vb-line-height);
     font-weight: 450;
@@ -361,7 +363,7 @@
     left: var(--vb-tip-x, 0);
     top: var(--vb-tip-y, 0);
     translate: -50% calc(-100% - var(--media-spacing) * 1.5);
-    font-family: var(--media-font-family);
+    font-family: var(--vb-ui-font);
     font-size: calc(var(--media-spacing) * 2.75);
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -392,7 +394,7 @@
     display: none;
     min-width: 0;
     align-self: center;
-    font-family: var(--vb-sentence-font);
+    font-family: var(--vb-read-font);
     font-size: calc(var(--media-spacing) * 4.25);
     line-height: 1.3;
     color: var(--vb-fg);
@@ -409,7 +411,7 @@
     gap: 0.35em;
     align-self: start;
     margin-top: calc(var(--media-spacing) * 1.25);
-    font-family: var(--media-font-family);
+    font-family: var(--vb-ui-font);
     font-size: calc(var(--media-spacing) * 3.1);          /* 12.4px */
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.01em;
@@ -530,7 +532,7 @@
   .verbatim .media-menu-popup,
   .verbatim .media-volume-popover-popup,
   .verbatim .media-tooltip-popup {
-    font-family: var(--media-font-family);
+    font-family: var(--vb-ui-font);
   }
   .verbatim .media-menu-popup,
   .verbatim .media-volume-popover-popup {
@@ -619,7 +621,7 @@
     background: transparent;
     color: var(--vb-fg);
     caret-color: var(--vb-accent);
-    font: 500 calc(var(--media-spacing) * 3.5) / 1.2 var(--media-font-family);
+    font: 500 calc(var(--media-spacing) * 3.5) / 1.2 var(--vb-ui-font);
     letter-spacing: 0.005em;
   }
   .verbatim .vb-find-input::placeholder { color: var(--vb-fg-muted); opacity: 1; }
@@ -628,7 +630,7 @@
   .verbatim .vb-find-input::-webkit-search-decoration { display: none; }
   .verbatim .vb-find-count {
     padding-inline: calc(var(--media-spacing) * 1.5);
-    font: calc(var(--media-spacing) * 3) / 1 var(--media-font-family);
+    font: calc(var(--media-spacing) * 3) / 1 var(--vb-ui-font);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
     color: var(--vb-fg-muted);

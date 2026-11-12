@@ -34,6 +34,8 @@ All colour and size decisions are custom properties on `.verbatim` in `src/video
 | `--vb-rail` | 40px (36px under 42rem, 32px under 24rem, 44px minimum on touch) | Left rail |
 | `--vb-thumb` | 13px | Seek thumb; search ticks use the same position formula |
 
+A site sets `--media-accent-color`, `--media-font-family`, `--vb-sentence-font` and `--media-border-radius` on the player or anything around it; the skin reads fonts through internal aliases so those settings are never shut out.
+
 Motion uses the scaffold's `--media-duration*` tokens, which collapse under `prefers-reduced-motion`.
 
 ## The sentence
