@@ -32,7 +32,7 @@ const CLIPS: Clip[] = [
     playbackId: 'O28Esic7RygYKj3RRi00cLGXz7sHpKm029cCQhLmjmCYc',
     transcript: './intro.vtt',
     chapters: './intro-chapters.vtt',
-    poster: 78.9,
+    poster: 19,
   },
   {
     key: 'nasa',
