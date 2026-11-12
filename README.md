@@ -55,6 +55,7 @@ Import `src/video/skin.ts` once, then paste the markup from `src/video/skin.html
 - `src/video/verbatim-transcript.ts`: the `<verbatim-transcript>` component (sentences, word timing, scrubbing, search).
 - `src/video/verbatim-find.ts`: the `<verbatim-find>` field and its seek-bar ticks.
 - `src/video/verbatim-quote.ts`: the `<verbatim-quote>` link button and the `#t=` reader.
+- `design/spec.md`: anatomy, tokens, states, keyboard and accessibility notes.
 - `src/video/icons.ts`: the Verbatim icon family.
 - `src/styles/`: shared tokens and preference overrides from the Scaffold skin.
 - `apps/preview/`: the workbench. `src/frame/player.ts` chooses the media.
