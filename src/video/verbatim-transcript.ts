@@ -230,6 +230,7 @@ export class VerbatimTranscriptElement extends UIElement {
   #startFrom = 0;
   #startTimer = 0;
   #quoteTimer = 0;
+  #chapterTimer = 0;
   #seekTimer = 0;
 
   // Previews: the sentence at the seek-bar pointer, or at a search match not yet jumped to
@@ -304,6 +305,7 @@ export class VerbatimTranscriptElement extends UIElement {
     this.#raf = this.#measureFrame = this.#seekTimer = 0;
     this.#track = null;
     this.#chapters?.removeEventListener('cuechange', this.#onChapterCue);
+    clearTimeout(this.#chapterTimer);
     this.#chapters = null;
     this.#media = null;
     this.#slider = null;
@@ -546,6 +548,17 @@ export class VerbatimTranscriptElement extends UIElement {
     this.#pickTracks();
   }
 
+  #awaitChapters(attempt: number) {
+    clearTimeout(this.#chapterTimer);
+    const track = this.#chapters;
+    if (!track || attempt > 40) return;
+    if (track.cues?.length) {
+      this.#onChapterCue();
+      return;
+    }
+    this.#chapterTimer = window.setTimeout(() => this.#awaitChapters(attempt + 1), 250);
+  }
+
   #onChapterCue = () => {
     this.#eyebrowKey = '';
     this.#syncToTime(this.#startAt ?? this.currentTime);
@@ -571,9 +584,11 @@ export class VerbatimTranscriptElement extends UIElement {
     if (chapters !== this.#chapters) {
       this.#chapters?.removeEventListener('cuechange', this.#onChapterCue);
       this.#chapters = chapters;
-      // A track is listed before its cues have loaded; the first cue change says the names are in.
+      // A track is listed before its cues have loaded. A cue change says the names are in, but a
+      // paused player may never fire one, so look again a few times as well.
       chapters?.addEventListener('cuechange', this.#onChapterCue);
       this.#eyebrowKey = '';
+      this.#awaitChapters(0);
     }
     if (this.#srcLoaded) {
       // Sentences come from `src`; the media's captions track is only used for native rendering.
