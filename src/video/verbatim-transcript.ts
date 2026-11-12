@@ -303,6 +303,7 @@ export class VerbatimTranscriptElement extends UIElement {
     clearTimeout(this.#seekTimer);
     this.#raf = this.#measureFrame = this.#seekTimer = 0;
     this.#track = null;
+    this.#chapters?.removeEventListener('cuechange', this.#onChapterCue);
     this.#chapters = null;
     this.#media = null;
     this.#slider = null;
@@ -545,6 +546,11 @@ export class VerbatimTranscriptElement extends UIElement {
     this.#pickTracks();
   }
 
+  #onChapterCue = () => {
+    this.#eyebrowKey = '';
+    this.#syncToTime(this.#startAt ?? this.currentTime);
+  };
+
   #pickTracks() {
     const list = this.#media?.textTracks;
     if (!list) return;
@@ -563,7 +569,10 @@ export class VerbatimTranscriptElement extends UIElement {
     if (chapters && chapters.mode === 'disabled') chapters.mode = 'hidden';
 
     if (chapters !== this.#chapters) {
+      this.#chapters?.removeEventListener('cuechange', this.#onChapterCue);
       this.#chapters = chapters;
+      // A track is listed before its cues have loaded; the first cue change says the names are in.
+      chapters?.addEventListener('cuechange', this.#onChapterCue);
       this.#eyebrowKey = '';
     }
     if (this.#srcLoaded) {
