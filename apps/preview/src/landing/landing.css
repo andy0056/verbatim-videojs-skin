@@ -58,3 +58,6 @@ kbd { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-siz
 .foot p { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) { .stage-frame { transition: none; } }
+
+.tool-links { display: inline-flex; gap: 18px; flex-wrap: wrap; justify-content: flex-end; }
+.tool-link[hidden] { display: none; }
